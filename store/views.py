@@ -1,7 +1,10 @@
 from django.shortcuts import get_object_or_404, render
+from cart.forms import CartAddProductForm
 from category.models import MainCategory, Category, SubCategory
-from store.models import Product
+from store.models import Product, ProductImage
 from django.db.models import Count, Q
+from django.utils import timezone
+from collections import defaultdict
 
 
 def store(request, main_slug=None, category_slug=None, subcategory_slug=None):
@@ -65,8 +68,25 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         sub_category__category__slug=category_slug,
         sub_category__category__main_category__slug=main_slug
     )
+    
+    cart_product_form = CartAddProductForm()
+    
+    # Fetch images for this single product only
+    images = ProductImage.objects.filter(
+        product=product
+    ).select_related('color').order_by('order')
+    
+    # Countdown logic
+    timer = 0
+    if product.countdown_end:
+        remaining = (product.countdown_end - timezone.now()).total_seconds()
+        timer = max(int(remaining), 0)
 
     context = {
         'product': product,
+        'images': images,
+        'first_image': product.first_image(),
+        'timer': timer,
+        'cart_product_form': cart_product_form,
     }
     return render(request, 'store/product_detail.html', context)

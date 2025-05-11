@@ -26,12 +26,13 @@ SECRET_KEY = "django-insecure-ejz$1doe!xcf)edqm%(mkt_62j0f0-1s)e!5h^c0nmnl0$(rs3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "adminsortable2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,7 +42,12 @@ INSTALLED_APPS = [
     "home",
     "category",
     "accounts",
+    "cart",
     "store",
+    "easy_thumbnails",
+    "django_extensions",
+    
+    
 ]
 
 MIDDLEWARE = [
@@ -67,6 +73,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "category.context_processors.menu_links",
+                "cart.context_processors.cart",
             ],
         },
     },
@@ -138,3 +145,5 @@ AUTH_USER_MODEL = 'accounts.Account'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+CART_SESSION_ID = 'cart'

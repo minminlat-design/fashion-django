@@ -33,7 +33,7 @@
                 </ul>
                 <div class="text-center overflow-hidden">
                     <div dir="ltr" class="swiper tf-sw-top_bar" data-preview="1" data-space="0" data-loop="true"
-                        data-speed="1000" data-delay="2000">
+                        data-speed="1000" data-delay="8000">
                         <div class="swiper-wrapper">
                             <div class="swiper-slide">
                                 <p class="top-bar-text fw-5">Spring Fashion Sale <a href="shop-default.html"
@@ -531,6 +531,7 @@
                             </ul>
                         </nav>
                     </div>
+
                     <div class="col-xl-3 col-md-4 col-3">
                         <ul class="nav-icon d-flex justify-content-end align-items-center gap-20">
                             <li class="nav-search"><a href="#canvasSearch" data-bs-toggle="offcanvas"
@@ -540,8 +541,22 @@
                                         class="icon icon-account"></i></a></li>
                             <li class="nav-wishlist"><a href="wishlist.html" class="nav-icon-item"><i
                                         class="icon icon-heart"></i><span class="count-box">0</span></a></li>
-                            <li class="nav-cart"><a href="#shoppingCart" data-bs-toggle="modal" class="nav-icon-item"><i
-                                        class="icon icon-bag"></i><span class="count-box">0</span></a></li>
+
+                            <li class="nav-cart">
+                                {% with total_items=cart|length %}
+                                    {% if total_items > 0 %}
+                                    <a href="{% url 'cart:cart_detail' %}" class="nav-icon-item">
+                                        <i class="icon icon-bag"></i>
+                                        <span class="count-box">{{ total_items }}</span>
+                                    </a>
+                                    {% else %}
+                                      <a href="{% url 'cart:cart_detail' %}" class="nav-icon-item">
+                                        <i class="icon icon-bag"></i>
+                                        <span class="count-box">0</span>
+                                    </a>
+                                    {% endif %}
+                                {% endwith %}
+                            </li>
                         </ul>
                     </div>
                 </div>

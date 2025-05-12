@@ -98,7 +98,7 @@ Your shopping cart
                         <div class="tf-cart-footer-inner">
                             <div class="tf-free-shipping-bar">
                                 <div class="tf-progress-bar">
-                                    <span style="width: 50%;">
+                                    <span style="width: {{ free_shipping_data.progress }}%;">
                                         <div class="progress-car">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="21" height="14"
                                                 viewBox="0 0 21 14" fill="currentColor">
@@ -109,11 +109,19 @@ Your shopping cart
                                         </div>
                                     </span>
                                 </div>
+
+                                <!-- shipping free calculation -->
                                 <div class="tf-progress-msg">
-                                    Buy <span class="price fw-6">$75.00</span> more to enjoy <span class="fw-6">Free
+                                    {% if not free_shipping_data.qualified %}
+                                    Buy <span class="price fw-6">${{ free_shipping_data.remaining }}</span> more to enjoy <span class="fw-6">Free
                                         Shipping</span>
+                                    {% else %}
+                                       <span class="fw-6"> You've unlocked Free Shipping!</span>
+                                    {% endif %}
                                 </div>
+                                
                             </div>
+
                             <div class="tf-page-cart-checkout">
                                 <div class="shipping-calculator">
                                     <summary
@@ -200,15 +208,17 @@ Your shopping cart
                                     </div>
                                 </div>
 
+                                <!-- gift wrap price -->
+
                                <form method="post" action="{% url 'cart:update_gift_wrap' %}">
-    {% csrf_token %}
-    <div class="cart-checkbox">
-        <input type="checkbox" name="gift_wrap" class="tf-check" id="cart-gift-checkbox" {% if cart.cart.gift_wrap %}checked{% endif %} onchange="this.form.submit()">
-        <label for="cart-gift-checkbox" class="fw-4">
-            <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
-        </label>
-    </div>
-</form>
+                                    {% csrf_token %}
+                                    <div class="cart-checkbox">
+                                        <input type="checkbox" name="gift_wrap" class="tf-check" id="cart-gift-checkbox" {% if cart.cart.gift_wrap %}checked{% endif %} onchange="this.form.submit()">
+                                        <label for="cart-gift-checkbox" class="fw-4">
+                                            <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
+                                        </label>
+                                    </div>
+                                </form>
 
 
 

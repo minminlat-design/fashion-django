@@ -2,10 +2,10 @@ from decimal import Decimal
 from django.conf import settings
 from store.models import Product
 
-# Fix: Use Decimal instead of float
 GIFT_WRAP_PRICE = Decimal("5.00")
 SHIPPING_COST = Decimal("10.00")
 FREE_SHIPPING_THRESHOLD = Decimal("100.00")
+
 
 class Cart:
     def __init__(self, request):
@@ -15,7 +15,6 @@ class Cart:
         self.session = request.session
         cart = self.session.get(settings.CART_SESSION_ID)
         if not cart:
-            # Save an empty cart in the session
             cart = self.session[settings.CART_SESSION_ID] = {}
         self.cart = cart
 
@@ -36,7 +35,6 @@ class Cart:
         self.save()
 
     def save(self):
-        # Mark the session as "modified" to make sure it gets saved
         self.session.modified = True
 
     def remove(self, product):
@@ -75,6 +73,14 @@ class Cart:
             if key.isdigit() and 'quantity' in self.cart[key]
         )
 
+    def get_subtotal(self):
+        return sum(
+            Decimal(item['price']) * item['quantity']
+            for key in self.cart
+            if key.isdigit() and 'price' in self.cart[key]
+            for item in [self.cart[key]]
+        )
+
     def get_gift_wrap_price(self):
         return GIFT_WRAP_PRICE if self.cart.get('gift_wrap', False) else Decimal("0.00")
 
@@ -84,16 +90,21 @@ class Cart:
         return SHIPPING_COST
 
     def get_total_price(self):
-        subtotal = sum(
-            Decimal(item['price']) * item['quantity']
-            for key in self.cart
-            if key.isdigit() and 'price' in self.cart[key]
-            for item in [self.cart[key]]
-        )
+        subtotal = self.get_subtotal()
         total = subtotal + self.get_gift_wrap_price() + self.get_shipping_price(subtotal)
         return total
 
+    def get_free_shipping_progress(self):
+        subtotal = self.get_subtotal()
+        progress = min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)
+        remaining = max(FREE_SHIPPING_THRESHOLD - subtotal, Decimal('0.00'))
+        return {
+            'subtotal': subtotal,
+            'progress': round(progress, 2),
+            'remaining': remaining,
+            'qualified': subtotal >= FREE_SHIPPING_THRESHOLD,
+        }
+
     def clear(self):
-        # Remove cart from session
         del self.session[settings.CART_SESSION_ID]
         self.save()

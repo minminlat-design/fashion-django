@@ -61,6 +61,8 @@ def update_gift_wrap(request):
 
 def cart_detail(request):
     cart = Cart(request)
+    free_shipping_data = cart.get_free_shipping_progress()
+    
     for item in cart:
         item['update_quantity_form'] = CartAddProductForm(
             initial={'quantity': item['quantity'], 'override': True}
@@ -68,6 +70,7 @@ def cart_detail(request):
     
     context = {
         'cart': cart,
+        'free_shipping_data': free_shipping_data,
     }
     
     return render(request, 'cart/cart_detail.html', context)

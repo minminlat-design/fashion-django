@@ -57,8 +57,12 @@ Your shopping cart
                                             <div class="cart-price price">${{ item.price }}</div>
                                         </td>
 
+                                         
+                                        
                                         
 
+                                        
+                                     
                                         
                                             <td class="tf-cart-item_quantity" cart-data-title="Quantity">
                                                 <div class="cart-quantity">
@@ -72,6 +76,7 @@ Your shopping cart
                                                   
                                                 </div>
                                             </td>
+                                    
                                         
                                         <td class="tf-cart-item_total tf-variant-item-total" cart-data-title="Total">
                                             <div class="cart-total price">${{ item.total_price }}</div>
@@ -194,15 +199,23 @@ Your shopping cart
                                         </div>
                                     </div>
                                 </div>
-                                <div class="cart-checkbox">
-                                    <input type="checkbox" class="tf-check" id="cart-gift-checkbox">
-                                    <label for="cart-gift-checkbox" class="fw-4">
-                                        <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
-                                    </label>
-                                </div>
+
+                               <form method="post" action="{% url 'cart:update_gift_wrap' %}">
+    {% csrf_token %}
+    <div class="cart-checkbox">
+        <input type="checkbox" name="gift_wrap" class="tf-check" id="cart-gift-checkbox" {% if cart.cart.gift_wrap %}checked{% endif %} onchange="this.form.submit()">
+        <label for="cart-gift-checkbox" class="fw-4">
+            <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
+        </label>
+    </div>
+</form>
+
+
+
                                 <div class="tf-cart-totals-discounts">
                                     <h3>Subtotal</h3>
-                                    <span class="total-value">${{ cart.get_total_price }} USD</span>
+                                    <span class="total-value">${{ cart.get_total_price|floatformat:2 }} USD</span>
+                                    
                                 </div>
                                 <p class="tf-cart-tax">
                                     Taxes and <a href="shipping-delivery.html">shipping</a> calculated at checkout
@@ -336,54 +349,7 @@ Your shopping cart
         <!-- page-cart -->
         
 
-    <table class="cart">
-        <thead>
-            <tr>
-                <th>Image</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Remove</th>
-                <th>Unit price</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-    <tbody>
-    {% for item in cart %}
-        {% with product=item.product %}
-            <tr>
-                <td>
-                    <a href="{{ product.get_absolute_url }}">
-                    <img src="{% if product.image %}{{ product.image.url }}
-                    {% else %}{% static "img/no_image.png" %}{% endif %}">
-                    </a>
-                </td>
-                <td>{{ product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>
-                    <form action="{% url "cart:cart_remove" product.id %}"
-                    method="post">
-                    <input type="submit" value="Remove">
-                    {% csrf_token %}
-                    </form>
-                </td>
-                <td class="num">${{ item.price }}</td>
-                <td class="num">${{ item.total_price }}</td>
-            </tr>
-        {% endwith %}
-    {% endfor %}
-        <tr class="total">
-            <td>Total</td>
-            <td colspan="4"></td>
-            <td class="num">${{ cart.get_total_price }}</td>
-        </tr>
-    </tbody>
-    </table>
-<p class="text-right">
-    <a href="{% url 'store:store' %}" class="button
-    light">Continue shopping</a>
-    <a href="#" class="button">Checkout</a>
-</p>
-
+    
     
 
 {% endblock content %}

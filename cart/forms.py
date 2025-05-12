@@ -22,4 +22,15 @@ class CartAddProductForm(forms.Form):
         widget=forms.HiddenInput
     )
     
+    # New form fields for free shipping and gift wrap
+    free_shipping = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+    
+    gift_wrap = forms.BooleanField(
+        required=False, 
+        initial=False, 
+        widget=forms.CheckboxInput(attrs={
+            'class': 'tf-check',
+            'id': 'cart-gift-checkbox',
+        })
+    )
     

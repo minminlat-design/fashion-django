@@ -5,6 +5,8 @@ from store.models import Product, ProductImage
 from django.db.models import Count, Q
 from django.utils import timezone
 from collections import defaultdict
+from django.utils.text import slugify
+
 
 
 def store(request, main_slug=None, category_slug=None, subcategory_slug=None):
@@ -60,6 +62,9 @@ def store(request, main_slug=None, category_slug=None, subcategory_slug=None):
     return render(request, 'store/store.html', context)
 
 
+
+# Product detail page
+
 def product_detail(request, main_slug, category_slug, subcategory_slug, product_slug):
     product = get_object_or_404(
         Product,
@@ -68,15 +73,28 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         sub_category__category__slug=category_slug,
         sub_category__category__main_category__slug=main_slug
     )
-    
+
+    # Get all product variations
+    variations = product.variations.select_related('option__type')
+
+    # Separate set_items and others
+    set_items = []
+    customizations = defaultdict(list)
+
+    for variation in variations:
+        option = variation.option
+        option.price_difference = variation.price_difference
+
+        if option.type.name.lower() == 'set items':
+            set_items.append(option)
+        else:
+            key = slugify(option.type.name).replace('-', '_')  # ex: lapel
+            customizations[key].append(option)
+
     cart_product_form = CartAddProductForm()
-    
-    # Fetch images for this single product only
-    images = ProductImage.objects.filter(
-        product=product
-    ).select_related('color').order_by('order')
-    
-    # Countdown logic
+
+    images = ProductImage.objects.filter(product=product).select_related('color').order_by('order')
+
     timer = 0
     if product.countdown_end:
         remaining = (product.countdown_end - timezone.now()).total_seconds()
@@ -88,5 +106,8 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'first_image': product.first_image(),
         'timer': timer,
         'cart_product_form': cart_product_form,
+        'set_items': set_items,
+        'customizations': dict(customizations),
     }
+
     return render(request, 'store/product_detail.html', context)

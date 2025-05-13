@@ -3,7 +3,7 @@ from adminsortable2.admin import SortableInlineAdminMixin, SortableAdminBase
 from django.utils.html import format_html
 from easy_thumbnails.files import get_thumbnailer
 from store.models import (
-    Product, Style,
+    Product, ProductVariation, Style,
     FabricCategory, Color,
     Season, Pattern, Material, ProductImage, ProductGroup
 )
@@ -23,7 +23,12 @@ class ProductImageInline(SortableInlineAdminMixin, admin.TabularInline):
             return format_html('<img src="{}" width="80" height="80" />', thumb_url)
         return "-"
     image_thumbnail.short_description = "Thumbnail"
-    
+
+# Product Variation Inline
+class ProductVariationInline(admin.TabularInline):
+    model = ProductVariation
+    extra = 1
+    autocomplete_fields = ['option']    
 
 @admin.register(Product)
 class ProductAdmin(SortableAdminBase, admin.ModelAdmin):
@@ -32,7 +37,7 @@ class ProductAdmin(SortableAdminBase, admin.ModelAdmin):
     search_fields = ['name', 'description', 'group__name']
     list_editable = ['price', 'is_available']
     prepopulated_fields = {'slug': ('name',)}
-    inlines = [ProductImageInline]
+    inlines = [ProductImageInline, ProductVariationInline]
     show_facets = admin.ShowFacets.ALWAYS
     
     def first_image_preview(self, obj):
@@ -78,5 +83,12 @@ class ColorAdmin(admin.ModelAdmin):
 class ProductGroupAdmin(admin.ModelAdmin):
     list_display = ['name']
     prepopulated_fields = {'slug': ('name',)}
+    
+    
+@admin.register(ProductVariation)
+class ProductVariationAdmin(admin.ModelAdmin):
+    list_display = ['product', 'option']
+    list_filter = ['option__type', 'product__sub_category']
+    search_fields = ['product__name', 'option__name']
 
 

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "store",
     "easy_thumbnails",
     "django_extensions",
+    "variation",
     
     
 ]

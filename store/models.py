@@ -128,3 +128,15 @@ class ProductImage(models.Model):
         return f"{self.product.name} - {self.alt_text or 'Image'}"
 
 
+#  Connect Variations to Products
+class ProductVariation(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variations')
+    option = models.ForeignKey('variation.VariationOption', on_delete=models.CASCADE)
+    price_difference = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+
+    
+    class Meta:
+        unique_together = ('product', 'option')
+        
+    def __str__(self):
+        return f"{self.product.name} - {self.option.name}"

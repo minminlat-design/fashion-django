@@ -22,6 +22,14 @@ Your shopping cart
                 
                 <div class="tf-page-cart-wrap">
                     <div class="tf-page-cart-item">
+
+                        {% if not cart %}
+                             <div style="text-align:center;">
+                                    <h5>Your cart is empty!</h5>
+                             </div>
+
+                                    {% else %}
+
                         
                             <table class="tf-table-page-cart">
                                 <thead>
@@ -33,6 +41,7 @@ Your shopping cart
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    
                                     {% for item in cart %}
                                     {% with product=item.product %}
                                     <tr class="tf-cart-item file-delete">
@@ -59,7 +68,6 @@ Your shopping cart
 
                                          
                                         
-                                        
 
                                         
                                      
@@ -84,19 +92,26 @@ Your shopping cart
                                     </tr>
                                     {% endwith %}
                                     {% endfor %}
+
+                                    
                                 </tbody>
                             </table>
+                           
 
                             <div class="tf-page-cart-note">
                                 <label for="cart-note">Add Order Note</label>
                                 <textarea name="note" id="cart-note" placeholder="How can we help you?"></textarea>
                             </div>
 
+                             {% endif %} <!-- if not cart and else -->
+
                      
                     </div>
                     <div class="tf-page-cart-footer">
                         <div class="tf-cart-footer-inner">
                             <div class="tf-free-shipping-bar">
+
+                                <!-- progress shipping bar -->
                                 <div class="tf-progress-bar">
                                     <span style="width: {{ free_shipping_data.progress }}%;">
                                         <div class="progress-car">

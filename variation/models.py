@@ -16,6 +16,7 @@ class VariationOption(models.Model):
     name = models.CharField(max_length=100, unique=True) # e.g., Lapel Style: Notch, 2 Buttons, Double Vents
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
+    included_by_default = models.BooleanField(default=False) # Optional
     
     class Meta:
         unique_together = ('type', 'name')

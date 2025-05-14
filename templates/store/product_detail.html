@@ -155,64 +155,73 @@
                                                
 
 
-                                                <h4>Grouped Variations Test</h4>
+                                                
                                                
                                                <form method="POST">
-  {% csrf_token %}
+                                                    {% csrf_token %}
 
-  <!-- Set Items Dropdown -->
-  {% if set_items %}
-    <label for="set-items">Choose Set</label>
-    <select name="set_items" id="set-items" class="form-select">
-      {% for option in set_items %}
-        <option 
-          value="{{ option.id }}" 
-          data-price="{{ option.price_difference }}" 
-          data-target="{{ option.name|lower }}">
-          {{ option.name }}
-        </option>
-      {% endfor %}
-    </select>
-  {% endif %}
+                                                    <!-- Included Items Info -->
+                                                    {% if product.pieces.exists %}
+                                                        <div class="included-items mb-2">
+                                                        <strong>Included Items:</strong>
+                                                        {{ product.pieces.all|join:", " }}
+                                                        </div>
+                                                    {% endif %}
 
-  <!-- Customize Toggle -->
-  <div style="margin-top: 10px;">
-    <button type="button" id="customize-toggle" class="btn btn-outline-primary">
-      Customize This Set
-    </button>
-  </div>
+                                                    <!-- Set Items Dropdown -->
+                                                    {% if set_items %}
+                                                        <label for="set-items" class="form-label">You can customize each garment.</label>
+                                                        <select name="set_items" id="set-items" class="form-select">
+                                                        {% for option in set_items %}
+                                                            <option 
+                                                            value="{{ option.id }}" 
+                                                            data-price="{{ option.price_difference }}" 
+                                                            data-target="{{ option.name|lower }}"
+                                                            {% if option.included_by_default %}selected{% endif %}>
+                                                            {{ option.name }}
+                                                            </option>
+                                                        {% endfor %}
+                                                        </select>
+                                                    {% endif %}
 
-  <!-- Customization Fields -->
-  <div id="customization-fields" style="display: none; margin-top: 15px;">
-    {% for target_item, option_groups in customizations.items %}
-      <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
-        <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
+                                                    <!-- Customize Toggle -->
+                                                    <div style="margin-top: 10px;">
+                                                        <button type="button" id="customize-toggle" class="btn btn-outline-primary">
+                                                        Customize This Garment
+                                                        </button>
+                                                    </div>
 
-        {% for key, options in option_groups.items %}
-          <div class="variation-block" data-variation-key="{{ key }}">
-            <label for="{{ key }}">{{ key|title }}</label>
-            <select name="{{ target_item }}_{{ key }}" class="form-select" data-group="{{ key }}">
-              {% for option in options %}
-                <option value="{{ option.id }}" data-price="{{ option.price_difference }}">
-                  {{ option.name }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        {% endfor %}
-      </div>
-    {% endfor %}
-  </div>
+                                                    <!-- Customization Fields -->
+                                                    <div id="customization-fields" style="display: none; margin-top: 15px;">
+                                                        {% for target_item, option_groups in customizations.items %}
+                                                        <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
+                                                            <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
 
-  <!-- Total Price -->
-  <div style="margin-top: 15px;">
-    <strong>Total Price:</strong>
-    <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
-  </div>
+                                                            {% for key, options in option_groups.items %}
+                                                            <div class="variation-block" data-variation-key="{{ key }}">
+                                                                <label for="{{ key }}">{{ key|title }}</label>
+                                                                <select name="{{ target_item }}_{{ key }}" class="form-select" data-group="{{ key }}">
+                                                                {% for option in options %}
+                                                                    <option value="{{ option.id }}" data-price="{{ option.price_difference }}"
+                                                                    {% if option.included_by_default %}selected{% endif %}>
+                                                                    {{ option.name }}
+                                                                    </option>
+                                                                {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
 
-  <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
-</form>
+                                                    <!-- Total Price -->
+                                                    <div style="margin-top: 15px;">
+                                                        <strong>Total Price:</strong>
+                                                        <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
+                                                    </div>
 
+                                                    <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
+                                                    </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -280,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function () {
   calculateTotal();
 });
 </script>
-
 
 
 

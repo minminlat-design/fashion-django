@@ -3,7 +3,7 @@ from adminsortable2.admin import SortableInlineAdminMixin, SortableAdminBase
 from django.utils.html import format_html
 from easy_thumbnails.files import get_thumbnailer
 from store.models import (
-    Product, ProductVariation, Style,
+    Product, ProductPiece, ProductVariation, Style,
     FabricCategory, Color,
     Season, Pattern, Material, ProductImage, ProductGroup
 )
@@ -38,6 +38,7 @@ class ProductAdmin(SortableAdminBase, admin.ModelAdmin):
     list_editable = ['price', 'is_available']
     prepopulated_fields = {'slug': ('name',)}
     inlines = [ProductImageInline, ProductVariationInline]
+    filter_horizontal = ['pieces']  # 👈 Add this line to manage item pieces
     show_facets = admin.ShowFacets.ALWAYS
     
     def first_image_preview(self, obj):
@@ -90,5 +91,10 @@ class ProductVariationAdmin(admin.ModelAdmin):
     list_display = ['product', 'option']
     list_filter = ['option__type', 'product__sub_category']
     search_fields = ['product__name', 'option__name']
+    
+    
+@admin.register(ProductPiece)
+class ProductPieceAdmin(admin.ModelAdmin):
+    list_display = ['name']
 
 

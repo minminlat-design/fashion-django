@@ -26,6 +26,8 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     countdown_end = models.DateTimeField(null=True, blank=True) # Countdown ends at this date
+    
+    pieces = models.ManyToManyField('ProductPiece', blank=True, related_name='products')
    
     
     class Meta:
@@ -140,3 +142,15 @@ class ProductVariation(models.Model):
         
     def __str__(self):
         return f"{self.product.name} - {self.option.name}"
+    
+    
+# This will store entries like: 'Jacket', 'Pants', 'Vest', 'Shirt', etc
+class ProductPiece(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    
+    class Meta:
+        verbose_name = 'Product Piece'
+        verbose_name_plural = 'Product Pieces'
+        
+    def __str__(self):
+        return self.name

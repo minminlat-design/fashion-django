@@ -74,13 +74,14 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         sub_category__category__slug=category_slug,
         sub_category__category__main_category__slug=main_slug
     )
+    
+    product_pieces = [piece.name.lower() for piece in product.pieces.all()]
 
     # Fetch all related variations with their option and type
     variations = product.variations.prefetch_related(
-    'option__type',
-    'option__type__target_items'
+        'option__type',
+        'option__type__target_items'
     )
-
 
     set_items = []
     customization_by_target = defaultdict(lambda: defaultdict(list))
@@ -89,6 +90,9 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         option = variation.option
         vtype = option.type
         option.price_difference = variation.price_difference
+        
+        # Store target names to help frontend rendering (e.g., 'jacket', 'vest')
+        option.target_names = [target.name.lower() for target in vtype.target_items.all()]
 
         # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it
         if vtype.name.lower() == 'set items':
@@ -116,7 +120,9 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'set_items': set_items,
         'customizations': {
             k: dict(v) for k, v in customization_by_target.items()
-        }  # { "jacket": { "lapel": [...], "vent": [...] }, ... }
+        },  # { "jacket": { "lapel": [...], "vent": [...] }, ... }
+        'variations': variations,  # To check "included_by_default" in the template
+        'product_pieces': product_pieces,
     }
 
     return render(request, 'store/product_detail.html', context)

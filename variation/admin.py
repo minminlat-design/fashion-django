@@ -15,6 +15,6 @@ class VariationTypeAdmin(admin.ModelAdmin):
     
 @admin.register(VariationOption)
 class VariationOptionAdmin(admin.ModelAdmin):
-    list_display = ['type', 'name', 'order']
+    list_display = ['type', 'name', 'order', 'included_by_default']
     list_filter = ['type']
     search_fields = ['name']

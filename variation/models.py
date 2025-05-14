@@ -17,6 +17,7 @@ class VariationOption(models.Model):
     description = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
     included_by_default = models.BooleanField(default=False) # Optional
+    image = models.ImageField(upload_to='variation_options/%Y/%m/%d/', blank=True, null=True)
     
     class Meta:
         unique_together = ('type', 'name')

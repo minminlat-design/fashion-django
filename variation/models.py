@@ -6,6 +6,8 @@ class VariationType(models.Model):
     name = models.CharField(max_length=100, unique=True) # lapel, Button, Vent, Lining
     description = models.TextField(blank=True, null=True)
     
+    target_items = models.ManyToManyField('TargetItem', related_name='variation_types')
+    
     def __str__(self):
         return self.name
     
@@ -21,3 +23,11 @@ class VariationOption(models.Model):
         
     def __str__(self):
         return f"{self.type.name} - {self.name}"
+
+
+class TargetItem(models.Model):
+    name = models.CharField(max_length=100, unique=True) # e.g. Jacket, Pants, Shirt
+    
+    def __str__(self):
+        return self.name
+    

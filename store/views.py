@@ -6,6 +6,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from collections import defaultdict
 from django.utils.text import slugify
+from variation.models import VariationType
 
 
 
@@ -74,22 +75,28 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         sub_category__category__main_category__slug=main_slug
     )
 
-    # Get all product variations
-    variations = product.variations.select_related('option__type')
+    # Fetch all related variations with their option and type
+    variations = product.variations.prefetch_related(
+    'option__type',
+    'option__type__target_items'
+    )
 
-    # Separate set_items and others
+
     set_items = []
-    customizations = defaultdict(list)
+    customization_by_target = defaultdict(lambda: defaultdict(list))
 
     for variation in variations:
         option = variation.option
+        vtype = option.type
         option.price_difference = variation.price_difference
 
-        if option.type.name.lower() == 'set items':
+        # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it
+        if vtype.name.lower() == 'set items':
             set_items.append(option)
         else:
-            key = slugify(option.type.name).replace('-', '_')  # ex: lapel
-            customizations[key].append(option)
+            for target in vtype.target_items.all():
+                key = slugify(vtype.name).replace('-', '_')  # e.g., lapel
+                customization_by_target[target.name.lower()][key].append(option)
 
     cart_product_form = CartAddProductForm()
 
@@ -107,7 +114,9 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'timer': timer,
         'cart_product_form': cart_product_form,
         'set_items': set_items,
-        'customizations': dict(customizations),
+        'customizations': {
+            k: dict(v) for k, v in customization_by_target.items()
+        }  # { "jacket": { "lapel": [...], "vent": [...] }, ... }
     }
 
     return render(request, 'store/product_detail.html', context)

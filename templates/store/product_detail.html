@@ -157,7 +157,7 @@
 
                                                 <h4>Grouped Variations Test</h4>
                                                
-                                                <form method="POST">
+                                               <form method="POST">
   {% csrf_token %}
 
   <!-- Set Items Dropdown -->
@@ -165,14 +165,17 @@
     <label for="set-items">Choose Set</label>
     <select name="set_items" id="set-items" class="form-select">
       {% for option in set_items %}
-        <option value="{{ option.id }}" data-price="{{ option.price_difference }}" data-includes="{{ option.name|lower }}">
+        <option 
+          value="{{ option.id }}" 
+          data-price="{{ option.price_difference }}" 
+          data-target="{{ option.name|lower }}">
           {{ option.name }}
         </option>
       {% endfor %}
     </select>
   {% endif %}
 
-  <!-- Customize Button -->
+  <!-- Customize Toggle -->
   <div style="margin-top: 10px;">
     <button type="button" id="customize-toggle" class="btn btn-outline-primary">
       Customize This Set
@@ -181,24 +184,30 @@
 
   <!-- Customization Fields -->
   <div id="customization-fields" style="display: none; margin-top: 15px;">
-    {% for key, options in customizations.items %}
-      <div class="variation-block" data-variation-key="{{ key }}">
-        <label>{{ key|title }}</label>
-        <select name="{{ key }}" class="form-select" data-group="{{ key }}">
-          {% for option in options %}
-            <option value="{{ option.id }}" data-price="{{ option.price_difference }}">
-              {{ option.name }}
-            </option>
-          {% endfor %}
-        </select>
+    {% for target_item, option_groups in customizations.items %}
+      <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
+        <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
+
+        {% for key, options in option_groups.items %}
+          <div class="variation-block" data-variation-key="{{ key }}">
+            <label for="{{ key }}">{{ key|title }}</label>
+            <select name="{{ target_item }}_{{ key }}" class="form-select" data-group="{{ key }}">
+              {% for option in options %}
+                <option value="{{ option.id }}" data-price="{{ option.price_difference }}">
+                  {{ option.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endfor %}
       </div>
     {% endfor %}
   </div>
 
+  <!-- Total Price -->
   <div style="margin-top: 15px;">
     <strong>Total Price:</strong>
-    <span id="total-price">{{ product.price }}</span>
-    {{ currency_symbol|default:"$" }}
+    <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
   </div>
 
   <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
@@ -213,43 +222,65 @@ document.addEventListener('DOMContentLoaded', function () {
   const totalPriceEl = document.getElementById('total-price');
   const basePrice = parseFloat({{ product.price|floatformat:2 }});
 
-  // Show/hide customization
+  let currentTarget = '';
+
+  // Show/hide customization toggle
   customizeToggle.addEventListener('click', function () {
-    customizationFields.style.display = customizationFields.style.display === 'none' ? 'block' : 'none';
+    const show = customizationFields.style.display === 'none';
+    customizationFields.style.display = show ? 'block' : 'none';
+    updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Calculate total
+  // Show only relevant customization group
+  function updateCustomizationGroups() {
+    const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
+    currentTarget = selectedSet.dataset.target;
+
+    document.querySelectorAll('.customization-group').forEach(group => {
+      group.style.display = group.dataset.target === currentTarget ? 'block' : 'none';
+    });
+  }
+
+  // Calculate total price
   function calculateTotal() {
     let total = basePrice;
 
-    // Add set item price
+    // Set item price
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     total += parseFloat(selectedSet.dataset.price || 0);
 
-    // Add customization prices if visible
+    // Customization prices (only visible group)
     if (customizationFields.style.display !== 'none') {
-      const selects = customizationFields.querySelectorAll('select');
-      selects.forEach(select => {
-        const selected = select.options[select.selectedIndex];
-        total += parseFloat(selected.dataset.price || 0);
-      });
+      const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
+      if (activeGroup) {
+        const selects = activeGroup.querySelectorAll('select');
+        selects.forEach(select => {
+          const selected = select.options[select.selectedIndex];
+          total += parseFloat(selected.dataset.price || 0);
+        });
+      }
     }
 
     totalPriceEl.textContent = total.toFixed(2);
   }
 
-  // Event listeners
-  setItemsSelect.addEventListener('change', calculateTotal);
+  // Event bindings
+  setItemsSelect.addEventListener('change', function () {
+    updateCustomizationGroups();
+    calculateTotal();
+  });
 
   document.querySelectorAll('#customization-fields select').forEach(select => {
     select.addEventListener('change', calculateTotal);
   });
 
-  // Initialize
+  // Init
+  updateCustomizationGroups();
   calculateTotal();
 });
 </script>
+
 
 
 

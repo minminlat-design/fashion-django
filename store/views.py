@@ -84,7 +84,10 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     )
 
     set_items = []
+    
     customization_by_target = defaultdict(lambda: defaultdict(list))
+    
+    set_items_unsorted = []
 
     for variation in variations:
         option = variation.option
@@ -96,11 +99,16 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
 
         # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it
         if vtype.name.lower() == 'set items':
-            set_items.append(option)
+            set_items_unsorted.append(option)
         else:
             for target in vtype.target_items.all():
                 key = slugify(vtype.name).replace('-', '_')  # e.g., lapel
+                target_name = target.name.strip().lower()
+                print(f"{target_name}- {key} -> {option.name}")
                 customization_by_target[target.name.lower()][key].append(option)
+                
+    # Sort set_items by VariationOption.order
+    set_items = sorted(set_items_unsorted, key=lambda o: o.order)
 
     cart_product_form = CartAddProductForm()
 
@@ -110,6 +118,8 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     if product.countdown_end:
         remaining = (product.countdown_end - timezone.now()).total_seconds()
         timer = max(int(remaining), 0)
+        
+    monogram_keys = ["monogram_style", "monogram_color", "monogram_placement"]
 
     context = {
         'product': product,
@@ -123,6 +133,7 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         },  # { "jacket": { "lapel": [...], "vent": [...] }, ... }
         'variations': variations,  # To check "included_by_default" in the template
         'product_pieces': product_pieces,
+        'monogram_keys': monogram_keys,
     }
 
     return render(request, 'store/product_detail.html', context)

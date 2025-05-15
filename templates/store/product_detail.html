@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load form_tags %}
+{% load custom_filters %}
 
 
 {% block title %}
@@ -102,6 +103,9 @@
                                     <div class="tf-product-info-title">
                                         <h5>{{ product.name }}</h5>
                                     </div>
+
+                                
+
                                     <div class="tf-product-info-badges">
                                         <div class="badges">Best seller</div>
                                         <div class="product-status-content">
@@ -142,8 +146,11 @@
                                     {% endif %}
                                    
 
-                                    
 
+                                       
+
+                                    
+{% comment "" %}
                                     <div class="tf-product-info-variant-picker">
                                         <div class="variant-picker-item">
                                             <div class="variant-picker-label">
@@ -151,14 +158,12 @@
                                             </div>
                                             <div class="variant-picker-values">
 
-
+{% endcomment %}
                                                
-
-
-                                                
-                                               
-                                               <form method="POST">
+<form method="POST">
   {% csrf_token %}
+
+  
 
   <!-- Included Items Info -->
   {% if product.pieces.exists %}
@@ -170,7 +175,7 @@
 
   <!-- Set Items Dropdown -->
   {% if set_items %}
-    <label for="set-items" class="form-label">You can customize each garment.</label>
+    <label for="set-items">You can customize each garment.</label>
     <select name="set_items" id="set-items" class="form-select">
       {% for option in set_items %}
         <option 
@@ -194,83 +199,246 @@
   <!-- Customization Fields -->
   <div id="customization-fields" style="display: none; margin-top: 15px;">
     {% for target_item, option_groups in customizations.items %}
-      <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
-        <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
+  <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
+    <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
 
-        {% for key, options in option_groups.items %}
-          <div class="variation-accordion mb-3">
-            <button class="btn btn-outline-secondary w-100 text-start variation-toggle" type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#variation-{{ target_item }}-{{ key|slugify }}"
-                    aria-expanded="false">
-              {{ key|title }}
-            </button>
+    {% for key, options in option_groups.items %}
+      {% if key not in monogram_keys %}
+        <div class="variation-accordion mb-3">
+          <button class="btn btn-outline-secondary w-100 text-start variation-toggle" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#variation-{{ target_item }}-{{ key|slugify }}"
+                  aria-expanded="false">
+            {{ key|title }}
+          </button>
 
-            <div class="collapse mt-2 {% if forloop.first %}show{% endif %}" id="variation-{{ target_item }}-{{ key|slugify }}">
-              <div class="row g-3 mt-2">
-                {% for option in options %}
-                  <div class="col-6 col-sm-4 col-md-3">
-                    <label class="w-100 text-center border rounded p-2 d-flex flex-column align-items-center justify-content-between h-100">
-                      <input type="radio" 
-                             name="{{ target_item }}_{{ key }}" 
-                             value="{{ option.id }}" 
-                             data-price="{{ option.price_difference }}"
-                             {% if option.included_by_default %}checked{% endif %}
-                             class="visually-hidden variation-radio">
+          <div class="collapse mt-2 {% if forloop.first %}show{% endif %}" id="variation-{{ target_item }}-{{ key|slugify }}">
+            <div class="row g-3 mt-2">
+              {% for option in options %}
+                <div class="col-6 col-sm-4 col-md-3">
+                  <label class="w-100 text-center border rounded p-2 d-flex flex-column align-items-center justify-content-between h-100">
+                    <input type="radio" 
+                          name="{{ target_item }}_{{ key }}" 
+                          value="{{ option.id }}" 
+                          data-price="{{ option.price_difference }}"
+                          {% if option.included_by_default %}checked{% endif %}
+                          class="visually-hidden variation-radio">
 
-                      {% if option.image %}
-                        <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 140px;">
-                      {% else %}
-                        <div class="bg-secondary text-white p-2 mb-2">No Image</div>
-                      {% endif %}
+                    {% if option.image %}
+                      <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 140px;">
+                    {% else %}
+                      <div class="bg-secondary text-white p-2 mb-2">No Image</div>
+                    {% endif %}
 
-                      <div class="small">{{ option.name }}</div>
-                    </label>
-                  </div>
-                {% endfor %}
-              </div>
+                    <div class="small">{{ option.name }}</div>
+                  </label>
+                </div>
+              {% endfor %}
             </div>
           </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% endif %}
     {% endfor %}
-  </div>
 
-  <!-- Total Price -->
-  <div class="mt-3">
-    <strong>Total Price:</strong>
-    <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
-  </div>
+    
 
-  <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
-</form>
+    {% if target_item|lower == "jacket" %}
+      <!-- MONOGRAM OPTIONS (Only for Jacket) -->
+
+        <!-- monogram checkbox -->
+        <div class="form-check my-3">
+            <input type="checkbox" class="form-check-input" value="" id="enable-jacket-monogram">
+            <label class="form-check-label" for="enable-jacket-monogram">
+            Add Monogram?
+            </label>
+        </div>
+    
+
+        <div id="jacket-monogram-fields" style="display: none;">
+            <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="initials-tab" data-bs-toggle="tab" data-bs-target="#initials" type="button" role="tab">
+                Initials
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#style" type="button" role="tab">
+                Style
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#color" type="button" role="tab">
+                Color
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#placement" type="button" role="tab">
+                Placement
+                </button>
+            </li>
+            </ul>
+
+            <div class="tab-content border rounded p-3" id="monogramTabContent">
+
+                    <!-- Initials -->
+            <div class="tab-pane fade show active" id="initials" role="tabpanel">
+                <label for="jacket_monogram_text" class="form-label">Enter Initials (max 10 characters):</label>
+                <input type="text" maxlength="10" name="jacket_monogram_text" id="jacket_monogram_text" class="form-control">
+            </div>
+
+     
+
+
+            <!-- Style -->
+            <div class="tab-pane fade" id="style" role="tabpanel">
+                
+                {% with target_customizations=customizations|get_item:target_item %}
+                {% with monogram_style=target_customizations|get_item:"monogram_style" %}
+                    {% if monogram_style %}
+                    {% for option in monogram_style %}
+                        <div class="form-check">
+                        <input class="form-check-input" type="radio" name="jacket_monogram_style" id="style-{{ option.id }}" value="{{ option.id }}">
+                        <label class="form-check-label" for="style-{{ option.id }}">
+                            {{ option.name }}
+                        </label>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            <!-- Color -->
+            <div class="tab-pane fade" id="color" role="tabpanel">
+                {% with target_customizations=customizations|get_item:target_item %}
+                {% with monogram_color=target_customizations|get_item:"monogram_color" %}
+                    {% if monogram_color %}
+                    {% for option in monogram_color %}
+                        <div class="form-check">
+                        <input class="form-check-input" type="radio" name="jacket_monogram_color" id="color-{{ option.id }}" value="{{ option.id }}">
+                        <label class="form-check-label" for="color-{{ option.id }}">
+                            {{ option.name }}
+                        </label>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            <!-- Placement -->
+            <div class="tab-pane fade" id="placement" role="tabpanel">
+                {% with target_customizations=customizations|get_item:target_item %}
+                {% with monogram_placement=target_customizations|get_item:"monogram_placement" %}
+                    {% if monogram_placement %}
+                    {% for option in monogram_placement %}
+                        <div class="form-check">
+                        <input class="form-check-input" type="radio" name="jacket_monogram_placement" id="placement-{{ option.id }}" value="{{ option.id }}">
+                        <label class="form-check-label" for="placement-{{ option.id }}">
+                            {{ option.name }}
+                        </label>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+
+
+        <!-- Vest checkbox -->
+        <!-- VEST OPTIONS -->
+<div class="form-check my-4">
+  <input type="checkbox" class="form-check-input" id="enable-vest-customization">
+  <label class="form-check-label" for="enable-vest-customization">
+    Add Vest?
+  </label>
+</div>
+
+<div id="vest-customization-fields" style="display: none;">
+  <div class="card border shadow-sm">
+    <div class="card-header bg-light">
+      <strong>Vest Customization Options</strong>
+    </div>
+    <div class="card-body">
+
+      <!-- Vest Style with Image -->
+{% with target_customizations=customizations|get_item:"vest" %}
+  {% with vest_style=target_customizations|get_item:"vest" %}
+    {% if vest_style %}
+      <div class="mb-3">
+        <label class="form-label">Vest Style:</label>
+        <div class="row g-3">
+          {% for option in vest_style %}
+            <div class="col-6 col-md-4 col-lg-3">
+              <div class="border rounded p-2 text-center h-100">
+                <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}">
+                <label class="form-check-label d-block" for="vest-style-{{ option.id }}">
+                  {% if option.image %}
+                    <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px;">
+                  {% else %}
+                    <div class="bg-light border rounded p-3 mb-2">No Image</div>
+                  {% endif %}
+                  <div>{{ option.name }}</div>
+                </label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% endwith %}
+{% endwith %}
+
+
+      <!-- You can add more vest options like lining, back type, buttons, etc. here -->
+
+    </div>
+  </div>
+</div>
+
+
+            
+    
+
+  </div> <!-- ← closes .customization-group -->
+{% endfor %}
+
+</div> <!-- closes #customization-fields -->
+
+<!-- Total Price and Submit -->
+<div class="mt-3">
+  <strong>Total Price:</strong>
+  <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
+</div>
+
+<button type="submit" class="btn btn-success mt-2">Add to Cart</button>
+</form> <!-- ← your missing form closing tag -->
+
 
 <!-- Image Preview -->
 <div class="variation-preview my-2">
   <img id="variation-preview-img" src="" alt="" style="max-height: 100px; display: none;">
 </div>
 
-
-
-
+<!-- vest checkbox -->
 <script>
-document.querySelectorAll('.variation-select').forEach(select => {
-    select.addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        const imgUrl = selected.dataset.imgUrl;
-        const previewImg = document.getElementById('variation-preview-img');
+  document.addEventListener("DOMContentLoaded", function () {
+    const vestCheckbox = document.getElementById("enable-vest-customization");
+    const vestFields = document.getElementById("vest-customization-fields");
 
-        if (imgUrl) {
-            previewImg.src = imgUrl;
-            previewImg.style.display = 'block';
-        } else {
-            previewImg.style.display = 'none';
-        }
+    vestCheckbox.addEventListener("change", function () {
+      if (this.checked) {
+        vestFields.style.display = "block";
+      } else {
+        vestFields.style.display = "none";
+      }
     });
-
-    // Trigger change on load
-    select.dispatchEvent(new Event('change'));
-});
+  });
 </script>
 
 
@@ -279,15 +447,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const setItemsSelect = document.getElementById('set-items');
   const customizeToggle = document.getElementById('customize-toggle');
   const customizationFields = document.getElementById('customization-fields');
+  const customizationGroups = document.querySelectorAll('.customization-group');
+  const monogramCheckbox = document.getElementById('enable-jacket-monogram');
+  const monogramFields = document.getElementById('jacket-monogram-fields');
   const totalPriceEl = document.getElementById('total-price');
-  const basePrice = parseFloat({{ product.price|floatformat:2 }});
-
+  const basePrice = parseFloat("{{ product.price|floatformat:2 }}");
   let currentTarget = '';
 
-  // Show/hide customization toggle
+
+  // Add monogram checkbox listener ONCE here:
+  if (monogramCheckbox && monogramFields) {
+    monogramCheckbox.addEventListener('change', () => {
+      monogramFields.style.display = monogramCheckbox.checked ? 'block' : 'none';
+      calculateTotal();
+    });
+  }
+
+  // Show/hide customization fields on toggle button
   customizeToggle.addEventListener('click', function () {
-    const show = customizationFields.style.display === 'none';
-    customizationFields.style.display = show ? 'block' : 'none';
+    const isHidden = customizationFields.style.display === 'none';
+    customizationFields.style.display = isHidden ? 'block' : 'none';
     updateCustomizationGroups();
     calculateTotal();
   });
@@ -297,20 +476,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     currentTarget = selectedSet.dataset.target;
 
-    document.querySelectorAll('.customization-group').forEach(group => {
+    customizationGroups.forEach(group => {
       group.style.display = group.dataset.target === currentTarget ? 'block' : 'none';
     });
-  }
 
-  // Calculate total price
+    if (currentTarget === 'jacket') {
+      monogramFields.style.display = monogramCheckbox.checked ? 'block' : 'none';
+    } else {
+      monogramFields.style.display = 'none';
+      monogramCheckbox.checked = false;  // optionally reset checkbox
+    }
+  }
+  // Calculate total price including monogram radios if they have data-price
   function calculateTotal() {
     let total = basePrice;
 
-    // Set item price
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     total += parseFloat(selectedSet.dataset.price || 0);
 
-    // Customization prices (only visible group)
     if (customizationFields.style.display !== 'none') {
       const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
       if (activeGroup) {
@@ -319,25 +502,31 @@ document.addEventListener('DOMContentLoaded', function () {
           total += parseFloat(radio.dataset.price || 0);
         });
       }
+
+      // Monogram options (if any)
+      if (currentTarget === 'jacket') {
+        const monogramRadios = monogramFields.querySelectorAll('input[type="radio"]:checked');
+        monogramRadios.forEach(radio => {
+          total += parseFloat(radio.dataset.price || 0);
+        });
+      }
     }
 
     totalPriceEl.textContent = total.toFixed(2);
   }
 
-  // Event bindings for set items
+  // Event: set item changes
   setItemsSelect.addEventListener('change', function () {
     updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Event bindings for radio buttons
+  // Event: radio changes
   document.querySelectorAll('#customization-fields input[type="radio"]').forEach(radio => {
-    radio.addEventListener('change', function () {
-      calculateTotal();
-    });
+    radio.addEventListener('change', calculateTotal);
   });
 
-  // Init
+  // Initialize view
   updateCustomizationGroups();
   calculateTotal();
 });
@@ -347,7 +536,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-
+<div class="tf-product-info-variant-picker">
+                                        <div class="variant-picker-item">
+                                            <div class="variant-picker-label">
+                                                Price: <span class="fw-6 variant-picker-label-value">$10</span>
+                                            </div>
+                                            <div class="variant-picker-values">
 
 
 

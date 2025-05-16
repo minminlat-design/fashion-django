@@ -348,7 +348,7 @@
         </div>
         {% endif %}
 
-
+ {% comment %}
 
         <!-- Vest checkbox -->
         <!-- VEST OPTIONS -->
@@ -401,6 +401,9 @@
   </div>
 </div>
 
+{% endcomment %}
+
+
 
             
     
@@ -409,6 +412,52 @@
 {% endfor %}
 
 </div> <!-- closes #customization-fields -->
+
+
+<!-- VEST TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
+<div class="form-check my-4">
+  <input type="checkbox" class="form-check-input" id="enable-vest-customization" data-price="{{ vest_price }}">
+  <label class="form-check-label" for="enable-vest-customization">
+    Add Vest (+${{ vest_price }})
+  </label>
+</div>
+
+<div id="vest-customization-fields" style="display: none;">
+  <div class="card border shadow-sm">
+    <div class="card-header bg-light">
+      <strong>Vest Customization Options</strong>
+    </div>
+    <div class="card-body">
+      {% with target_customizations=customizations|get_item:"vest" %}
+        {% with vest_style=target_customizations|get_item:"vest" %}
+          {% if vest_style %}
+            <div class="mb-3">
+              <label class="form-label">Vest Style:</label>
+              <div class="row g-3">
+                {% for option in vest_style %}
+                  <div class="col-6 col-md-4 col-lg-3">
+                    <div class="border rounded p-2 text-center h-100">
+                      <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}">
+                      <label class="form-check-label d-block" for="vest-style-{{ option.id }}">
+                        {% if option.image %}
+                          <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px;">
+                        {% else %}
+                          <div class="bg-light border rounded p-3 mb-2">No Image</div>
+                        {% endif %}
+                        <div>{{ option.name }}</div>
+                      </label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+
 
 <!-- Total Price and Submit -->
 <div class="mt-3">
@@ -425,23 +474,30 @@
   <img id="variation-preview-img" src="" alt="" style="max-height: 100px; display: none;">
 </div>
 
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const setItemsSelect = document.getElementById("set-items");
   const customizeToggle = document.getElementById("customize-toggle");
   const customizationFields = document.getElementById("customization-fields");
   const customizationGroups = document.querySelectorAll(".customization-group");
+
   const monogramCheckbox = document.getElementById("enable-jacket-monogram");
   const monogramFields = document.getElementById("jacket-monogram-fields");
+
   const vestCheckbox = document.getElementById("enable-vest-customization");
   const vestFields = document.getElementById("vest-customization-fields");
+
   const totalPriceEl = document.getElementById("total-price");
+
   const basePrice = parseFloat("{{ product.price|floatformat:2 }}");
   const MONOGRAM_PRICE = parseFloat("{{ monogram_price }}");
   const VEST_PRICE = parseFloat("{{ vest_price }}");
+
   let currentTarget = "";
 
-  // Handle monogram checkbox toggle
+  // Toggle monogram fields
   if (monogramCheckbox && monogramFields) {
     monogramCheckbox.addEventListener("change", () => {
       monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
@@ -449,7 +505,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Handle vest checkbox toggle
+  // Toggle vest fields
   if (vestCheckbox && vestFields) {
     vestCheckbox.addEventListener("change", () => {
       vestFields.style.display = vestCheckbox.checked ? "block" : "none";
@@ -474,6 +530,7 @@ document.addEventListener("DOMContentLoaded", function () {
       group.style.display = group.dataset.target === currentTarget ? "block" : "none";
     });
 
+    // Handle jacket-specific monogram visibility
     if (currentTarget === "jacket") {
       monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
     } else {
@@ -482,56 +539,53 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Calculate total price
   function calculateTotal() {
-    let total = basePrice;
+  let total = basePrice;
 
-    // Add set item price
-    const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
-    total += parseFloat(selectedSet.dataset.price || 0);
+  // Add set item price
+  const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
+  total += parseFloat(selectedSet.dataset.price || 0);
 
-    if (customizationFields.style.display !== "none") {
-      const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
-      if (activeGroup) {
-        const checkedRadios = activeGroup.querySelectorAll('input[type="radio"]:checked');
-        checkedRadios.forEach((radio) => {
-          total += parseFloat(radio.dataset.price || 0);
-        });
-      }
-
-      // Add monogram price
-      if (currentTarget === "jacket") {
-        const monogramRadios = monogramFields.querySelectorAll('input[type="radio"]:checked');
-        monogramRadios.forEach((radio) => {
-          total += parseFloat(radio.dataset.price || 0);
-        });
-
-        if (monogramCheckbox && monogramCheckbox.checked) {
-          total += parseFloat(monogramCheckbox.dataset.price || 0);
-        }
-      }
-
-      // ✅ Add vest price if checked
-      if (vestCheckbox && vestCheckbox.checked) {
-        total += parseFloat(vestCheckbox.dataset.price || 0);
-      }
+  // Add prices from customization groups and monogram **only if customization is visible**
+  if (customizationFields.style.display !== "none") {
+    const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
+    if (activeGroup) {
+      const checkedRadios = activeGroup.querySelectorAll('input[type="radio"]:checked');
+      checkedRadios.forEach((radio) => {
+        total += parseFloat(radio.dataset.price || 0);
+      });
     }
 
-    totalPriceEl.textContent = total.toFixed(2);
+    // Monogram price logic (jacket only)
+    if (currentTarget === "jacket" && monogramCheckbox && monogramCheckbox.checked) {
+      total += MONOGRAM_PRICE;
+      const monogramRadios = monogramFields.querySelectorAll('input[type="radio"]:checked');
+      monogramRadios.forEach((radio) => {
+        total += parseFloat(radio.dataset.price || 0);
+      });
+    }
   }
 
-  // Set item dropdown
+  // Add vest price regardless of customization panel visibility
+  if (vestCheckbox && vestCheckbox.checked) {
+    total += VEST_PRICE;
+  }
+
+  totalPriceEl.textContent = total.toFixed(2);
+}
+
+
+  // Listeners for changes
   setItemsSelect.addEventListener("change", function () {
     updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Customization radio buttons
   document.querySelectorAll('#customization-fields input[type="radio"]').forEach((radio) => {
     radio.addEventListener("change", calculateTotal);
   });
 
-  // Initialize on page load
+  // Initialize everything
   updateCustomizationGroups();
   calculateTotal();
 });

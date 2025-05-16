@@ -105,7 +105,7 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
             monogram_price = variation.price_difference
             
         # Extract Vest price
-        if vtype.name.lower() == "set items" and option.name.lower() == "vest" and vest_price is None:
+        if vtype.name.lower() == "vest" and option.name.lower() == "vest" and vest_price is None:
             vest_price = variation.price_difference
 
         # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it

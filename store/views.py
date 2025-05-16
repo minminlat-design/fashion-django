@@ -85,6 +85,7 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     
     monogram_price = None
     vest_price = None
+    shirt_price = None
 
     set_items = []
     
@@ -107,6 +108,10 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         # Extract Vest price
         if vtype.name.lower() == "vest" and option.name.lower() == "vest" and vest_price is None:
             vest_price = variation.price_difference
+            
+        # Extract Vest price
+        if vtype.name.lower() == "shirt" and option.name.lower() == "shirt" and shirt_price is None:
+            shirt_price = variation.price_difference
 
         # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it
         if vtype.name.lower() == 'set items':
@@ -147,6 +152,7 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'monogram_keys': monogram_keys,
         'monogram_price': monogram_price or 0,
         'vest_price': vest_price or 0,
+        'shirt_price': shirt_price or 0,
     }
 
     return render(request, 'store/product_detail.html', context)

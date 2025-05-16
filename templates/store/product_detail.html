@@ -247,9 +247,9 @@
 
         <!-- monogram checkbox -->
         <div class="form-check my-3">
-            <input type="checkbox" class="form-check-input" value="" id="enable-jacket-monogram">
+            <input type="checkbox" class="form-check-input" value="" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
             <label class="form-check-label" for="enable-jacket-monogram">
-            Add Monogram?
+            Add Monogram (+${{ monogram_price }})
             </label>
         </div>
     
@@ -297,7 +297,7 @@
                     {% if monogram_style %}
                     {% for option in monogram_style %}
                         <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jacket_monogram_style" id="style-{{ option.id }}" value="{{ option.id }}">
+                        <input class="form-check-input" type="radio" name="jacket_monogram_style" id="style-{{ option.id }}" value="{{ option.id }}" >
                         <label class="form-check-label" for="style-{{ option.id }}">
                             {{ option.name }}
                         </label>
@@ -353,9 +353,9 @@
         <!-- Vest checkbox -->
         <!-- VEST OPTIONS -->
 <div class="form-check my-4">
-  <input type="checkbox" class="form-check-input" id="enable-vest-customization">
+  <input type="checkbox" class="form-check-input" id="enable-vest-customization" data-price="{{ vest_price }}">
   <label class="form-check-label" for="enable-vest-customization">
-    Add Vest?
+    Add Vest (+${{ vest_price }})
   </label>
 </div>
 
@@ -425,112 +425,118 @@
   <img id="variation-preview-img" src="" alt="" style="max-height: 100px; display: none;">
 </div>
 
-<!-- vest checkbox -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const vestCheckbox = document.getElementById("enable-vest-customization");
-    const vestFields = document.getElementById("vest-customization-fields");
-
-    vestCheckbox.addEventListener("change", function () {
-      if (this.checked) {
-        vestFields.style.display = "block";
-      } else {
-        vestFields.style.display = "none";
-      }
-    });
-  });
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  const setItemsSelect = document.getElementById('set-items');
-  const customizeToggle = document.getElementById('customize-toggle');
-  const customizationFields = document.getElementById('customization-fields');
-  const customizationGroups = document.querySelectorAll('.customization-group');
-  const monogramCheckbox = document.getElementById('enable-jacket-monogram');
-  const monogramFields = document.getElementById('jacket-monogram-fields');
-  const totalPriceEl = document.getElementById('total-price');
+document.addEventListener("DOMContentLoaded", function () {
+  const setItemsSelect = document.getElementById("set-items");
+  const customizeToggle = document.getElementById("customize-toggle");
+  const customizationFields = document.getElementById("customization-fields");
+  const customizationGroups = document.querySelectorAll(".customization-group");
+  const monogramCheckbox = document.getElementById("enable-jacket-monogram");
+  const monogramFields = document.getElementById("jacket-monogram-fields");
+  const vestCheckbox = document.getElementById("enable-vest-customization");
+  const vestFields = document.getElementById("vest-customization-fields");
+  const totalPriceEl = document.getElementById("total-price");
   const basePrice = parseFloat("{{ product.price|floatformat:2 }}");
-  let currentTarget = '';
+  const MONOGRAM_PRICE = parseFloat("{{ monogram_price }}");
+  const VEST_PRICE = parseFloat("{{ vest_price }}");
+  let currentTarget = "";
 
-
-  // Add monogram checkbox listener ONCE here:
+  // Handle monogram checkbox toggle
   if (monogramCheckbox && monogramFields) {
-    monogramCheckbox.addEventListener('change', () => {
-      monogramFields.style.display = monogramCheckbox.checked ? 'block' : 'none';
+    monogramCheckbox.addEventListener("change", () => {
+      monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
       calculateTotal();
     });
   }
 
-  // Show/hide customization fields on toggle button
-  customizeToggle.addEventListener('click', function () {
-    const isHidden = customizationFields.style.display === 'none';
-    customizationFields.style.display = isHidden ? 'block' : 'none';
+  // Handle vest checkbox toggle
+  if (vestCheckbox && vestFields) {
+    vestCheckbox.addEventListener("change", () => {
+      vestFields.style.display = vestCheckbox.checked ? "block" : "none";
+      calculateTotal();
+    });
+  }
+
+  // Toggle main customization panel
+  customizeToggle.addEventListener("click", function () {
+    const isHidden = customizationFields.style.display === "none";
+    customizationFields.style.display = isHidden ? "block" : "none";
     updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Show only relevant customization group
+  // Show correct customization group based on selected set item
   function updateCustomizationGroups() {
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     currentTarget = selectedSet.dataset.target;
 
-    customizationGroups.forEach(group => {
-      group.style.display = group.dataset.target === currentTarget ? 'block' : 'none';
+    customizationGroups.forEach((group) => {
+      group.style.display = group.dataset.target === currentTarget ? "block" : "none";
     });
 
-    if (currentTarget === 'jacket') {
-      monogramFields.style.display = monogramCheckbox.checked ? 'block' : 'none';
+    if (currentTarget === "jacket") {
+      monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
     } else {
-      monogramFields.style.display = 'none';
-      monogramCheckbox.checked = false;  // optionally reset checkbox
+      monogramFields.style.display = "none";
+      monogramCheckbox.checked = false;
     }
   }
-  // Calculate total price including monogram radios if they have data-price
+
+  // Calculate total price
   function calculateTotal() {
     let total = basePrice;
 
+    // Add set item price
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     total += parseFloat(selectedSet.dataset.price || 0);
 
-    if (customizationFields.style.display !== 'none') {
+    if (customizationFields.style.display !== "none") {
       const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
       if (activeGroup) {
         const checkedRadios = activeGroup.querySelectorAll('input[type="radio"]:checked');
-        checkedRadios.forEach(radio => {
+        checkedRadios.forEach((radio) => {
           total += parseFloat(radio.dataset.price || 0);
         });
       }
 
-      // Monogram options (if any)
-      if (currentTarget === 'jacket') {
+      // Add monogram price
+      if (currentTarget === "jacket") {
         const monogramRadios = monogramFields.querySelectorAll('input[type="radio"]:checked');
-        monogramRadios.forEach(radio => {
+        monogramRadios.forEach((radio) => {
           total += parseFloat(radio.dataset.price || 0);
         });
+
+        if (monogramCheckbox && monogramCheckbox.checked) {
+          total += parseFloat(monogramCheckbox.dataset.price || 0);
+        }
+      }
+
+      // ✅ Add vest price if checked
+      if (vestCheckbox && vestCheckbox.checked) {
+        total += parseFloat(vestCheckbox.dataset.price || 0);
       }
     }
 
     totalPriceEl.textContent = total.toFixed(2);
   }
 
-  // Event: set item changes
-  setItemsSelect.addEventListener('change', function () {
+  // Set item dropdown
+  setItemsSelect.addEventListener("change", function () {
     updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Event: radio changes
-  document.querySelectorAll('#customization-fields input[type="radio"]').forEach(radio => {
-    radio.addEventListener('change', calculateTotal);
+  // Customization radio buttons
+  document.querySelectorAll('#customization-fields input[type="radio"]').forEach((radio) => {
+    radio.addEventListener("change", calculateTotal);
   });
 
-  // Initialize view
+  // Initialize on page load
   updateCustomizationGroups();
   calculateTotal();
 });
 </script>
+
 
 
 

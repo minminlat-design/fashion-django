@@ -154,5 +154,16 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'vest_price': vest_price or 0,
         'shirt_price': shirt_price or 0,
     }
+    
+    # Determine which item pieces are included in this product
+    included_pieces = {
+        'is_jacket_product': product.pieces.filter(name__iexact="jacket").exists(),
+        'is_vest_product': product.pieces.filter(name__iexact="vest").exists(),
+        'is_pants_product': product.pieces.filter(name__iexact="pants").exists(),
+        'is_shirt_product': product.pieces.filter(name__iexact="shirt").exists(),
+    }
+
+    context.update(included_pieces)
+
 
     return render(request, 'store/product_detail.html', context)

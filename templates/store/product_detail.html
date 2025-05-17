@@ -354,19 +354,20 @@
 
 </div> <!-- closes #customization-fields -->
 
+{% if not is_shirt_product %}
 
 <!-- VEST TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
 <div class="form-check my-4">
   <input type="checkbox" class="form-check-input" id="enable-vest-customization" data-price="{{ vest_price }}">
   <label class="form-check-label" for="enable-vest-customization">
-    Add Vest (+${{ vest_price }})
+    Add a Vest (+${{ vest_price }})
   </label>
 </div>
 
 <div id="vest-customization-fields" style="display: none;">
   <div class="card border shadow-sm">
     <div class="card-header bg-light">
-      <strong>Vest Customization Options</strong>
+      <strong>Vest</strong>
     </div>
     <div class="card-body">
       {% with target_customizations=customizations|get_item:"vest" %}
@@ -404,14 +405,14 @@
 <div class="form-check my-4">
   <input type="checkbox" class="form-check-input" id="enable-shirt-customization" data-price="{{ shirt_price }}">
   <label class="form-check-label" for="enable-shirt-customization">
-    Add Shirt (+${{ shirt_price }})
+    Add a Shirt (+${{ shirt_price }})
   </label>
 </div>
 
 <div id="shirt-customization-fields" style="display: none;">
   <div class="card border shadow-sm">
     <div class="card-header bg-light">
-      <strong>Shirt Customization Options</strong>
+      <strong>Shirt</strong>
     </div>
     <div class="card-body">
       {% with target_customizations=customizations|get_item:"shirt" %}
@@ -444,7 +445,7 @@
   </div>
 </div>
 
-
+{% endif %}
 
 <!-- Total Price and Submit -->
 <div class="mt-3">

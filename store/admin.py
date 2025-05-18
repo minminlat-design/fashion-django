@@ -95,6 +95,7 @@ class ProductVariationAdmin(admin.ModelAdmin):
     
 @admin.register(ProductPiece)
 class ProductPieceAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['name', 'slug']
+    prepopulated_fields = {'slug': ('name',)}
 
 

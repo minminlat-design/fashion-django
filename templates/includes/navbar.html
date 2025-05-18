@@ -36,9 +36,7 @@
                         data-speed="1000" data-delay="8000">
                         <div class="swiper-wrapper">
                             <div class="swiper-slide">
-                                <p class="top-bar-text fw-5">Spring Fashion Sale <a href="shop-default.html"
-                                        title="all collection" class="tf-btn btn-line">Shop now<i
-                                            class="icon icon-arrow1-top-left"></i></a></p>
+                                <p class="top-bar-text fw-5">Welcome To My Tailor</p>
                             </div>
                             <div class="swiper-slide">
                                 <p class="top-bar-text fw-5">Summer sale discount off 70%</p>
@@ -76,6 +74,8 @@
     </div>
     <!-- /Top Bar -->
 
+    
+
     <!--         ************* header navbar ************         -->
         <!-- Header -->
         <header id="header" class="header-default">
@@ -93,7 +93,7 @@
                     </div>
                     <div class="col-xl-3 col-md-4 col-6">
                         <a href="{% url 'home:home' %}" class="logo-header">
-                            <img src="{% static 'images/logo/logo.svg' %}" alt="logo" class="logo">
+                            <img src="{% static 'images/logo/tailor-logo.png' %}" alt="logo" class="logo">
                         </a>
                     </div>
                     <div class="col-xl-6 tf-md-hidden">
@@ -126,16 +126,20 @@
                                                                     class="menu-link-text link">{{ sub.name }} ({{ sub.product_count }})</a></li>
                                                             
                                                             {% endfor %}
+                                                            <br/>
                                                             
                                                         </ul>
                                                     </div>
                                                 </div>
+                                                
 
                                                 {% endfor %}
 
                                                 <!-- show only if main category is "Shop"-->
+                                               
                                                 
                                                 {% if main.name == "Shop" %} 
+                                                
                                                 <div class="col-lg-4">
                                                     <div class="menu-heading">Best seller</div>
                                                     <div class="hover-sw-nav hover-sw-2">
@@ -480,7 +484,11 @@
                                                     </div>
                                                 </div>
 
-                                                {% else %}
+                                                {% endif %}
+
+                                                {% if main.name == "Features" %}
+
+                                                
 
                                                 <div class="col-lg-3">
                                                     <div class="collection-item hover-img">
@@ -520,6 +528,8 @@
                                                 </div>
 
                                                 {% endif %}
+
+                                                
 
                                             </div>
                                         </div>

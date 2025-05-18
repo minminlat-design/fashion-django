@@ -2,6 +2,10 @@ from django.db import models
 from django.urls import reverse
 from category.models import SubCategory
 from django.forms import ValidationError
+from ckeditor.fields import RichTextField
+from django.utils.text import slugify
+
+
 
 class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -10,7 +14,7 @@ class Product(models.Model):
     group = models.ForeignKey('ProductGroup', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     sub_category = models.ForeignKey(SubCategory, on_delete=models.CASCADE, related_name='products') # must not use '' cos it is imported from another app
     
-    description = models.TextField()
+    description = RichTextField('Description', config_name='default')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
@@ -147,6 +151,7 @@ class ProductVariation(models.Model):
 # This will store entries like: 'Jacket', 'Pants', 'Vest', 'Shirt', etc
 class ProductPiece(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(unique=True, blank=True, null=True)
     
     class Meta:
         verbose_name = 'Product Piece'
@@ -154,3 +159,5 @@ class ProductPiece(models.Model):
         
     def __str__(self):
         return self.name
+    
+    

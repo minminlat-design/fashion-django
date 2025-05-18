@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "easy_thumbnails",
     "django_extensions",
     "variation",
+    "ckeditor",
+    "ckeditor_uploader",
     
     
 ]
@@ -146,5 +148,29 @@ AUTH_USER_MODEL = 'accounts.Account'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ckeditor upload location
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
 
 CART_SESSION_ID = 'cart'
+
+
+# ckeditor-5 configuration
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Full',  # Use 'Basic', 'Full' or a custom toolbar config
+        'height': 300,
+        'width': '100%',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source'],
+            ['Image', 'Table'],
+        ],
+        'extraPlugins': ','.join([
+            'uploadimage',  # Enable upload feature if needed
+        ]),
+    }
+}
+

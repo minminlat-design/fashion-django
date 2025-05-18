@@ -76,6 +76,9 @@ class Product(models.Model):
     def first_image(self):
         return self.images.order_by('order').first()
     
+    def second_image(self):
+        images = self.images.order_by('order')
+        return images[1] if images.count() > 1 else None
     
     
 

@@ -127,8 +127,14 @@
                                 {% if product.first_image %}
                                 <img class="lazyload img-product" data-src="{{ product.first_image.image.url }}"
                                     src="{{ product.first_image.image.url }}" alt="{{ product.name }}">
-                                <img class="lazyload img-hover" data-src="{{ product.first_image.image.url }}"
-                                    src="{{ product.first_image.image.url }}" alt="{{ product.name }}">
+                                {% else %}
+                                 <img class="lazyload img-hover" data-src="{% static 'images/placeholder.png' %}"
+                                    src="{% static 'images/placeholder.png' %}" alt="{{ product.name }}">
+                                {% endif %}
+
+                                {% if product.second_image %}
+                                 <img class="lazyload img-hover" data-src="{{ product.second_image.image.url }}"
+                                    src="{{ product.second_image.image.url }}" alt="{{ product.name }}">
                                 {% else %}
                                  <img class="lazyload img-hover" data-src="{% static 'images/placeholder.png' %}"
                                     src="{% static 'images/placeholder.png' %}" alt="{{ product.name }}">

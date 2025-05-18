@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import HomeSlider, LookBook
+from .models import HomeSlider, LookBook, ShopGram
 from easy_thumbnails.files import get_thumbnailer
 from django.utils.html import format_html
 
@@ -20,6 +20,8 @@ class HomeSliderAdmin(admin.ModelAdmin):
     admin_thumbnail.short_description = "Image"
 
 
+
+# lookbook admin
 @admin.register(LookBook)
 class LookBookAdmin(admin.ModelAdmin):
     list_display = ['admin_thumbnail', 'name', 'created_at', 'is_active']
@@ -33,4 +35,22 @@ class LookBookAdmin(admin.ModelAdmin):
         return "No image"
     
     admin_thumbnail.short_description = "Image"
+    
+
+
+# Shop Gram  admin    
+@admin.register(ShopGram)
+class ShopGramAdmin(admin.ModelAdmin):
+    list_display = ['admin_thumbnail', 'caption', 'created_at', 'is_active']
+    list_filter = ['is_active',]
+    search_fields = ['name']
+    
+    def admin_thumbnail(self, obj):
+        if obj.image:
+            thumbnail_url = get_thumbnailer(obj.image).get_thumbnail({'size': (100, 60), 'crop': True}).url
+            return format_html('<img src="{}" width="100" height="auto" />', thumbnail_url)
+        return "No image"
+    
+    admin_thumbnail.short_description = "Image"
+
 

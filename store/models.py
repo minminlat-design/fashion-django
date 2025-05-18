@@ -3,7 +3,15 @@ from django.urls import reverse
 from category.models import SubCategory
 from django.forms import ValidationError
 from ckeditor.fields import RichTextField
-from django.utils.text import slugify
+from django.db.models import F
+
+
+class IsSaleManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            discounted_price__isnull=False,
+            discounted_price__lt=F('price')
+        )
 
 
 
@@ -32,6 +40,9 @@ class Product(models.Model):
     countdown_end = models.DateTimeField(null=True, blank=True) # Countdown ends at this date
     
     pieces = models.ManyToManyField('ProductPiece', blank=True, related_name='products')
+    
+    objects = models.Manager() # default manager
+    is_sale = IsSaleManager() # Custom manager for sale products
    
     
     class Meta:
@@ -64,7 +75,8 @@ class Product(models.Model):
         
     def first_image(self):
         return self.images.order_by('order').first()
-
+    
+    
     
 
 class Style(models.Model):

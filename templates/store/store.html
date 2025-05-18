@@ -19,16 +19,18 @@
 
 
         <!-- page-title -->
-        <div class="tf-page-title">
+        
+        <div class="tf-page-title text-white" style="background-color: #000;">
             <div class="container-full">
-                <div class="row">
+                <div class="row" >
                     <div class="col-12">
-                        <div class="heading text-center">New Arrival</div>
-                        <p class="text-center text-2 text_black-2 mt_5">Shop through our latest selection of Fashion</p>
+                        <div class="heading text-center">Minimal & Catchy</div>
+                        <p class="text-center text-2 text_white-2 mt_5">Shop through our latest selection of Fashion</p>
                     </div>
                 </div>
             </div>
         </div>
+        
         <!-- /page-title -->
         <section class="flat-spacing-1">
             <div class="container">
@@ -87,96 +89,116 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- side menu bar -->
                 <div class="tf-row-flex">
                     <aside class="tf-shop-sidebar wrap-sidebar-mobile">
                         
                        
-{% for main in links %}
-    {% if main.id == active_main_category_id %}
-        {# Open the selected main category #}
-        {% for category in main.categories.all %}
-        <div class="widget-facet wd-categories">
-            <div class="facet-title"
-                 data-bs-target="#categories-{{ category.id }}"
-                 data-bs-toggle="collapse"
-                 aria-expanded="{% if category.id == active_category_id %}true{% else %}false{% endif %}"
-                 aria-controls="categories-{{ category.id }}">
-                <span>{{ category.name }}</span>
-                <span class="icon icon-arrow-up"></span>
-            </div>
-            <div id="categories-{{ category.id }}"
-                 class="collapse {% if category.id == active_category_id %}show{% endif %}">
-                <ul class="list-categoris current-scrollbar mb_36">
+                        {% for main in links %}
+                            {% if main.id == active_main_category_id %}
+                                {# Open the selected main category #}
+                                {% for category in categories %}
+                                    {% if category.main_category_id == main.id %}
+                                    <div class="widget-facet wd-categories">
+                                        <div class="facet-title"
+                                            data-bs-target="#categories-{{ category.id }}"
+                                            data-bs-toggle="collapse"
+                                            aria-expanded="{% if category.id == active_category_id %}true{% else %}false{% endif %}"
+                                            aria-controls="categories-{{ category.id }}">
 
-                    
-                    
-                    {% for sub in category.subcategories.all %}
-                    <li class="cate-item {% if sub_category.slug == sub.slug %}current{% endif %}">
-                        <a href="{{ sub.get_absolute_url }}">
-                            <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endfor %}
-    {% elif not active_main_category_id and forloop.first %}
-        {# No main category selected, show the first one by default #}
-        {% for category in main.categories.all %}
-        <div class="widget-facet wd-categories">
-            <div class="facet-title"
-                 data-bs-target="#categories-{{ category.id }}"
-                 data-bs-toggle="collapse"
-                 aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
-                 aria-controls="categories-{{ category.id }}">
-                <span>{{ category.name }}</span>
-                <span class="icon icon-arrow-up"></span>
-            </div>
-            <div id="categories-{{ category.id }}"
-                 class="collapse {% if forloop.first %}show{% endif %}">
-                <ul class="list-categoris current-scrollbar mb_36">
-                    {% for sub in category.subcategories.all %}
-                    <li class="cate-item {% if sub_category.slug == sub.slug %}current{% endif %}">
-                        <a href="{{ sub.get_absolute_url }}">
-                            <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        {# All other main categories collapsed #}
-        {% for category in main.categories.all %}
-        <div class="widget-facet wd-categories">
-            <div class="facet-title"
-                 data-bs-target="#categories-{{ category.id }}"
-                 data-bs-toggle="collapse"
-                 aria-expanded="false"
-                 aria-controls="categories-{{ category.id }}">
-                <span>{{ category.name }}</span>
-                <span class="icon icon-arrow-up"></span>
-            </div>
-            <div id="categories-{{ category.id }}" class="collapse">
-                <ul class="list-categoris current-scrollbar mb_36">
-                    {% for sub in category.subcategories.all %}
-                    <li class="cate-item {% if sub_category.slug == sub.slug %}current{% endif %}">
-                        <a href="{{ sub.get_absolute_url }}">
-                            <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endfor %}
-    {% endif %}
-{% endfor %}
+                                            <span>{{ category.name }}</span>
+                                            <span class="icon icon-arrow-up"></span>
+                                        </div>
+
+                                        <div id="categories-{{ category.id }}"
+                                            class="collapse {% if category.id == active_category_id %}show{% endif %}">
+                                            <ul class="list-categoris current-scrollbar mb_36">
+
+                                                {# 'All' link for the category #}
+                                                <li class="cate-item {% if not sub_category or sub_category.category.id == category.id and not sub_category.slug %}current{% endif %}">
+                                                    <a href="{% url 'store:store_category' main_slug=main.slug category_slug=category.slug %}">
+                                                        <span>All</span>&nbsp;<span>({{ category.product_count }})</span>
+                                                    </a>
+                                                </li>
+
+                                                {# Subcategories with product counts #}
+                                                {% for sub in category.subcategories.all %}
+                                                <li class="cate-item {% if sub_category and sub_category.slug == sub.slug %}current{% endif %}">
+                                                    <a href="{% url 'store:store_subcategory' main_slug=main.slug category_slug=category.slug subcategory_slug=sub.slug %}">
+                                                        <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                            {% elif not active_main_category_id and forloop.first %}
+                                {# Default open first main category if none selected #}
+                                {% for category in categories %}
+                                    {% if category.main_category_id == main.id %}
+                                    <div class="widget-facet wd-categories">
+                                        <div class="facet-title"
+                                            data-bs-target="#categories-{{ category.id }}"
+                                            data-bs-toggle="collapse"
+                                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                            aria-controls="categories-{{ category.id }}">
+                                            <span>{{ category.name }}</span>
+                                            <span class="icon icon-arrow-up"></span>
+                                        </div>
+                                        <div id="categories-{{ category.id }}"
+                                            class="collapse {% if forloop.first %}show{% endif %}">
+                                            <ul class="list-categoris current-scrollbar mb_36">
+                                                {% for sub in category.subcategories.all %}
+                                                <li class="cate-item {% if sub_category and sub_category.slug == sub.slug %}current{% endif %}">
+                                                    <a href="{{ sub.get_absolute_url }}">
+                                                        <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+
+                            {% else %}
+                                {# All other main categories collapsed #}
+                                {% for category in categories %}
+                                    {% if category.main_category_id == main.id %}
+                                    <div class="widget-facet wd-categories">
+                                        <div class="facet-title"
+                                            data-bs-target="#categories-{{ category.id }}"
+                                            data-bs-toggle="collapse"
+                                            aria-expanded="false"
+                                            aria-controls="categories-{{ category.id }}">
+                                            <span>{{ category.name }}</span>
+                                            <span class="icon icon-arrow-up"></span>
+                                        </div>
+                                        <div id="categories-{{ category.id }}" class="collapse">
+                                            <ul class="list-categoris current-scrollbar mb_36">
+                                                {% for sub in category.subcategories.all %}
+                                                <li class="cate-item {% if sub_category and sub_category.slug == sub.slug %}current{% endif %}">
+                                                    <a href="{{ sub.get_absolute_url }}">
+                                                        <span>{{ sub.name }}</span>&nbsp;<span>({{ sub.product_count }})</span>
+                                                    </a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
 
 
 
+                    <!-- on Sale product section -->
                         <div class="widget-facet">
                             <div class="facet-title" data-bs-target="#sale-products" data-bs-toggle="collapse"
                                 aria-expanded="true" aria-controls="sale-products">
@@ -185,36 +207,26 @@
                             </div>
                             <div id="sale-products" class="collapse show">
                                 <div class="widget-featured-products mb_36">
+
+                                    {% for sale in sale_products %}
                                     <div class="featured-product-item">
-                                        <a href="product-detail.html" class="card-product-wrapper">
+                                        <a href="{{ sale.get_absolute_url }}" class="card-product-wrapper">
+                                            {% if sale.first_image %}
                                             <img class="lazyload img-product"
-                                                data-src="images/products/img-feature-1.png" alt="image-feature">
+                                                data-src="{{ sale.first_image.image.url }}" alt="{{ sale.name }}">
+                                            {% else %}
+                                            <img class="lazyload img-product"
+                                                data-src="{% static 'images/placeholder.png' %}" alt="{{ sale.name }}">
+                                            {% endif %}
                                         </a>
                                         <div class="card-product-info">
-                                            <a href="#" class="title link">Jersey thong body</a>
-                                            <span class="price">$105.95</span>
+                                            <a href="#" class="title link">{{ sale.name }}</a>
+                                            <span class="price"><del>${{ sale.price}} </del> ${{ sale.discounted_price }}</span>
                                         </div>
                                     </div>
-                                    <div class="featured-product-item">
-                                        <a href="product-detail.html" class="card-product-wrapper">
-                                            <img class="lazyload img-product"
-                                                data-src="images/products/img-feature-2.png" alt="image-feature">
-                                        </a>
-                                        <div class="card-product-info">
-                                            <a href="#" class="title link">Lace-trimmed Satin Camisole Top</a>
-                                            <span class="price">€24,95</span>
-                                        </div>
-                                    </div>
-                                    <div class="featured-product-item">
-                                        <a href="product-detail.html" class="card-product-wrapper">
-                                            <img class="lazyload img-product"
-                                                data-src="images/products/img-feature-3.png" alt="image-feature">
-                                        </a>
-                                        <div class="card-product-info">
-                                            <a href="#" class="title link">Linen-blend Tank Top</a>
-                                            <span class="price">$16.95</span>
-                                        </div>
-                                    </div>
+                                    {% endfor %}
+                                    
+                                    
                                 </div>
                             </div>
                         </div>
@@ -271,6 +283,8 @@
                                 </ul>
                             </div>
                         </div>
+
+                        <!-- product galler sidebar -->
                         <div class="widget-facet">
                             <div class="facet-title" data-bs-target="#gallery" data-bs-toggle="collapse"
                                 aria-expanded="true" aria-controls="gallery">
@@ -279,30 +293,15 @@
                             </div>
                             <div id="gallery" class="collapse show">
                                 <div class="grid-3 gap-4 mb_36">
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-1.jpg"
+
+                                    {% for product in gallery %}
+                                    <a href="{{ product.get_absolute_url }}" class="item-gallery">
+                                        {% if product.first_image %}
+                                        <img class="lazyload" data-src="{{ product.first_image.image.url }}"
                                             alt="img-gallery">
+                                        {% endif %}
                                     </a>
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-2.jpg"
-                                            alt="img-gallery">
-                                    </a>
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-3.jpg"
-                                            src="images/shop/gallery/gallery-3.jpg" alt="img-gallery">
-                                    </a>
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-4.jpg"
-                                            alt="img-gallery">
-                                    </a>
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-5.jpg"
-                                            src="images/shop/gallery/gallery-5.jpg" alt="img-gallery">
-                                    </a>
-                                    <a href="product-detail.html" class="item-gallery">
-                                        <img class="lazyload" data-src="images/shop/gallery/gallery-6.jpg"
-                                            src="images/shop/gallery/gallery-6.jpg" alt="img-gallery">
-                                    </a>
+                                   {% endfor %}
 
                                 </div>
                             </div>

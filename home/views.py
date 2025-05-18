@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import HomeSlider, LookBook
+from .models import HomeSlider, LookBook, ShopGram
 from category.models import Category
 from store.models import Product
 
@@ -22,12 +22,16 @@ def home(request):
     # Lookbook section 
     lookbooks = LookBook.objects.filter(is_active=True).order_by('order', '-created_at')
     
+    # Shop Gram section
+    shop_gram_posts = ShopGram.objects.filter(is_active=True).prefetch_related('products').order_by('order', '-created_at')[:6]
+    
     
     context = {
         'sliders': sliders,
         'shop_categories': shop_categories,
         'latest_products': latest_products,
         'lookbooks': lookbooks,
+        'shop_gram_posts': shop_gram_posts,
     }
     
     

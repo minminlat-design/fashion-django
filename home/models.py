@@ -46,7 +46,7 @@ class ShopGram(models.Model):
     order = models.PositiveSmallIntegerField(default=0)
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['order', '-created_at']
         
     def __str__(self):
         return self.caption or f"Post {self.pk}"

@@ -137,340 +137,64 @@
 
                                                 <!-- show only if main category is "Shop"-->
                                                
-                                                
+                                                <!-- nave products display shop -->
                                                 {% if main.name == "Shop" %} 
                                                 
                                                 <div class="col-lg-4">
-                                                    <div class="menu-heading">Best seller</div>
+                                                    <div class="menu-heading">Latest Arrivals</div>
                                                     <div class="hover-sw-nav hover-sw-2">
                                                         <div dir="ltr" class="swiper tf-product-header">
                                                             <div class="swiper-wrapper">
+
+                                                            {% for product in navbar_products %}
                                                                 <div class="swiper-slide" lazy="true">
                                                                     <div class="card-product">
                                                                         <div class="card-product-wrapper">
-                                                                            <a href="#" class="product-img">
+                                                                            <a href="{{ product.get_absolute_url }}" class="product-img">
+                                                                                {% if product.first_image %}
                                                                                 <img class="lazyload img-product"
-                                                                                    data-src="{% static 'images/products/orange-1.jpg' %}"
-                                                                                    src="{% static 'images/products/orange-1.jpg' %}"
-                                                                                    alt="image-product">
+                                                                                    data-src="{{ product.first_image.image.url }}"
+                                                                                    src="{{ product.first_image.image.url }}"
+                                                                                    alt="{{ product.name }}">
+
+                                                                                {% else %}
+                                                                                <img class="lazyload img-product"
+                                                                                    data-src="{% static 'images/placeholder.png' %}"
+                                                                                    src="{% static 'images/placeholder.png' %}"
+                                                                                    alt="{{ product.name }}">
+                                                                                {% endif %}
+
+                                                                                {% if product.second_image %}
                                                                                 <img class="lazyload img-hover"
-                                                                                    data-src="{% static 'images/products/white-1.jpg' %}"
-                                                                                    src="{% static 'images/products/white-1.jpg' %}"
-                                                                                    alt="image-product">
+                                                                                    data-src="{{ product.second_image.image.url}}"
+                                                                                    src="{{ product.second_image.image.url}}"
+                                                                                    alt="{{ product.name }}">
+                                                                                {% else %}
+                                                                                 <img class="lazyload img-hover"
+                                                                                    data-src="{% static 'images/placeholder.png' %}"
+                                                                                    src="{% static 'images/placeholder.png' %}"
+                                                                                    alt="{{ product.name }}">
+                                                                                {% endif %}
                                                                             </a>
-                                                                            <div class="list-product-btn absolute-2">
-                                                                                <a href="#quick_add"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                                                    <span class="icon icon-bag"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        Add</span>
-                                                                                </a>
-                                                                                <a href="javascript:void(0);"
-                                                                                    class="box-icon bg_white wishlist btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-heart"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Wishlist</span>
-                                                                                    <span
-                                                                                        class="icon icon-delete"></span>
-                                                                                </a>
-                                                                                <a href="#compare"
-                                                                                    data-bs-toggle="offcanvas"
-                                                                                    aria-controls="offcanvasLeft"
-                                                                                    class="box-icon bg_white compare btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-compare"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Compare</span>
-                                                                                    <span
-                                                                                        class="icon icon-check"></span>
-                                                                                </a>
-                                                                                <a href="#quick_view"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quickview tf-btn-loading">
-                                                                                    <span class="icon icon-view"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        View</span>
-                                                                                </a>
-                                                                            </div>
+                                                                            
                                                                         </div>
                                                                         <div class="card-product-info">
-                                                                            <a href="#" class="title link">Ribbed Tank
-                                                                                Top</a>
-                                                                            <span class="price">$16.95</span>
-                                                                            <ul class="list-color-product">
-                                                                                <li
-                                                                                    class="list-color-item color-swatch active">
-                                                                                    <span class="tooltip">Orange</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_orange-3"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/orange-1.jpg' %}"
-                                                                                        src="{% static 'images/products/orange-1.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                                <li
-                                                                                    class="list-color-item color-swatch">
-                                                                                    <span class="tooltip">Black</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_dark"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/black-1.jpg' %}"
-                                                                                        src="{% static 'images/products/black-1.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                                <li
-                                                                                    class="list-color-item color-swatch">
-                                                                                    <span class="tooltip">White</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_white"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/white-1.jpg' %}"
-                                                                                        src="{% static 'images/products/white-1.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                            </ul>
+                                                                            <a href="#" class="title link">{{ product.name }}</a>
+                                                                            <span class="price">
+                                                                                {% if product.discounted_price %}
+                                                                                <del>${{ product.price }}</del> ${{ product.discounted_price }}
+                                                                                {% else %}
+                                                                                ${{ product.price }}
+                                                                                {% endif %}
+                                                                            </span>
+                                                                            
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="swiper-slide" lazy="true">
-                                                                    <div class="card-product">
-                                                                        <div class="card-product-wrapper">
-                                                                            <div class="product-img">
-                                                                                <img class="lazyload img-product"
-                                                                                    data-src="{% static 'images/products/white-3.jpg' %}"
-                                                                                    src="{% static 'images/products/white-3.jpg' %}"
-                                                                                    alt="image-product">
-                                                                                <img class="lazyload img-hover"
-                                                                                    data-src="{% static 'images/products/white-4.jpg' %}"
-                                                                                    src="{% static 'images/products/white-4.jpg' %}"
-                                                                                    alt="image-product">
-                                                                            </div>
-                                                                            <div class="list-product-btn absolute-2">
-                                                                                <a href="#shoppingCart"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                                                    <span class="icon icon-bag"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        cart</span>
-                                                                                </a>
-                                                                                <a href="javascript:void(0);"
-                                                                                    class="box-icon bg_white wishlist btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-heart"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Wishlist</span>
-                                                                                    <span
-                                                                                        class="icon icon-delete"></span>
-                                                                                </a>
-                                                                                <a href="#compare"
-                                                                                    data-bs-toggle="offcanvas"
-                                                                                    aria-controls="offcanvasLeft"
-                                                                                    class="box-icon bg_white compare btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-compare"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Compare</span>
-                                                                                    <span
-                                                                                        class="icon icon-check"></span>
-                                                                                </a>
-                                                                                <a href="#quick_view"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quickview tf-btn-loading">
-                                                                                    <span class="icon icon-view"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        View</span>
-                                                                                </a>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="card-product-info">
-                                                                            <a href="#" class="title link">Oversized
-                                                                                Printed T-shirt</a>
-                                                                            <span class="price">$10.00</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="swiper-slide" lazy="true">
-                                                                    <div class="card-product">
-                                                                        <div class="card-product-wrapper">
-                                                                            <div class="product-img">
-                                                                                <img class="lazyload img-product"
-                                                                                    data-src="{% static 'images/products/white-2.jpg' %}"
-                                                                                    src="{% static 'images/products/white-2.jpg' %}"
-                                                                                    alt="image-product">
-                                                                                <img class="lazyload img-hover"
-                                                                                    data-src="{% static 'images/products/pink-1.jpg' %}"
-                                                                                    src="{% static 'images/products/pink-1.jpg' %}"
-                                                                                    alt="image-product">
-                                                                            </div>
-                                                                            <div class="list-product-btn">
-                                                                                <a href="#quick_add"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                                                    <span class="icon icon-bag"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        Add</span>
-                                                                                </a>
-                                                                                <a href="javascript:void(0);"
-                                                                                    class="box-icon bg_white wishlist btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-heart"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Wishlist</span>
-                                                                                    <span
-                                                                                        class="icon icon-delete"></span>
-                                                                                </a>
-                                                                                <a href="#compare"
-                                                                                    data-bs-toggle="offcanvas"
-                                                                                    aria-controls="offcanvasLeft"
-                                                                                    class="box-icon bg_white compare btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-compare"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Compare</span>
-                                                                                    <span
-                                                                                        class="icon icon-check"></span>
-                                                                                </a>
-                                                                                <a href="#quick_view"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quickview tf-btn-loading">
-                                                                                    <span class="icon icon-view"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        View</span>
-                                                                                </a>
-                                                                            </div>
-                                                                            <div class="size-list">
-                                                                                <span>S</span>
-                                                                                <span>M</span>
-                                                                                <span>L</span>
-                                                                                <span>XL</span>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="card-product-info">
-                                                                            <a href="#" class="title">Oversized Printed
-                                                                                T-shirt</a>
-                                                                            <span class="price">$16.95</span>
-                                                                            <ul class="list-color-product">
-                                                                                <li
-                                                                                    class="list-color-item color-swatch active">
-                                                                                    <span class="tooltip">White</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_white"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/white-2.jpg' %}"
-                                                                                        src="{% static 'images/products/white-2.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                                <li
-                                                                                    class="list-color-item color-swatch">
-                                                                                    <span class="tooltip">Pink</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_purple"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/pink-1.jpg' %}"
-                                                                                        src="{% static 'images/products/pink-1.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                                <li
-                                                                                    class="list-color-item color-swatch">
-                                                                                    <span class="tooltip">Black</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_dark"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="{% static 'images/products/black-2.jpg' %}"
-                                                                                        src="{% static 'images/products/black-2.jpg' %}"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="swiper-slide" lazy="true">
-                                                                    <div class="card-product">
-                                                                        <div class="card-product-wrapper">
-                                                                            <div class="product-img">
-                                                                                <img class="lazyload img-product"
-                                                                                    data-src="images/products/brown-2.jpg"
-                                                                                    src="images/products/brown-2.jpg"
-                                                                                    alt="image-product">
-                                                                                <img class="lazyload img-hover"
-                                                                                    data-src="images/products/brown-3.jpg"
-                                                                                    src="images/products/brown-3.jpg"
-                                                                                    alt="image-product">
-                                                                            </div>
-                                                                            <div class="size-list">
-                                                                                <span>S</span>
-                                                                                <span>M</span>
-                                                                                <span>L</span>
-                                                                                <span>XL</span>
-                                                                            </div>
-                                                                            <div class="list-product-btn">
-                                                                                <a href="#quick_add"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quick-add tf-btn-loading">
-                                                                                    <span class="icon icon-bag"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        Add</span>
-                                                                                </a>
-                                                                                <a href="javascript:void(0);"
-                                                                                    class="box-icon bg_white wishlist btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-heart"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Wishlist</span>
-                                                                                    <span
-                                                                                        class="icon icon-delete"></span>
-                                                                                </a>
-                                                                                <a href="#compare"
-                                                                                    data-bs-toggle="offcanvas"
-                                                                                    aria-controls="offcanvasLeft"
-                                                                                    class="box-icon bg_white compare btn-icon-action">
-                                                                                    <span
-                                                                                        class="icon icon-compare"></span>
-                                                                                    <span class="tooltip">Add to
-                                                                                        Compare</span>
-                                                                                    <span
-                                                                                        class="icon icon-check"></span>
-                                                                                </a>
-                                                                                <a href="#quick_view"
-                                                                                    data-bs-toggle="modal"
-                                                                                    class="box-icon bg_white quickview tf-btn-loading">
-                                                                                    <span class="icon icon-view"></span>
-                                                                                    <span class="tooltip">Quick
-                                                                                        View</span>
-                                                                                </a>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="card-product-info">
-                                                                            <a href="#" class="title link">V-neck linen
-                                                                                T-shirt</a>
-                                                                            <span class="price">$114.95</span>
-                                                                            <ul class="list-color-product">
-                                                                                <li
-                                                                                    class="list-color-item color-swatch active">
-                                                                                    <span class="tooltip">Brown</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_brown"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="images/products/brown-2.jpg"
-                                                                                        src="images/products/brown-2.jpg"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                                <li
-                                                                                    class="list-color-item color-swatch">
-                                                                                    <span class="tooltip">White</span>
-                                                                                    <span
-                                                                                        class="swatch-value bg_white"></span>
-                                                                                    <img class="lazyload"
-                                                                                        data-src="images/products/white-5.jpg"
-                                                                                        src="images/products/white-5.jpg"
-                                                                                        alt="image-product">
-                                                                                </li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                                {% endfor %}
+
+                                                                
+                                                                
                                                             </div>
                                                         </div>
                                                         <div
@@ -488,44 +212,71 @@
 
                                                 {% if main.name == "Features" %}
 
-                                                
+                                                <!-- feature images display -->
+
+                                                {% for category in navbar_categories %}
 
                                                 <div class="col-lg-3">
                                                     <div class="collection-item hover-img">
                                                         <div class="collection-inner">
-                                                            <a href="shop-men.html" class="collection-image img-style">
+                                                            <a href="{{ category.get_absolute_url }}" class="collection-image img-style">
+                                                                {% if category.image %}
                                                                 <img class="lazyload"
-                                                                    data-src="{% static 'images/collections/collection-1.jpg' %}"
-                                                                    src="{% static 'images/collections/collection-1.jpg' %}"
-                                                                    alt="collection-demo-1">
+                                                                    data-src="{{ category.image.url }}"
+                                                                    src="{{ category.image.url }}"
+                                                                    alt="{{ category.name }}">
+                                                                {% endif %}
                                                             </a>
                                                             <div class="collection-content">
                                                                 <a href="shop-men.html"
-                                                                    class="tf-btn hover-icon btn-xl collection-title fs-16"><span>Men</span><i
+                                                                    class="tf-btn hover-icon btn-xl collection-title fs-16"><span>{{ category.name }}</span><i
                                                                         class="icon icon-arrow1-top-left"></i></a>
 
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                               
+
+
+                                                {% endfor %}  <!-- end of navbar categories image loop -->
+                                                
+
+
+
+                                                {% endif %}
+
+
+                                                {% if main.name == "Trunk Shows" %}
+
+                                                <!-- trunk shows images display -->
+
+                                                {% for show in navbar_trunk_shows %}
+
                                                 <div class="col-lg-3">
                                                     <div class="collection-item hover-img">
                                                         <div class="collection-inner">
-                                                            <a href="shop-women.html"
-                                                                class="collection-image img-style">
+                                                            <a href="{{ show.get_absolute_url }}" class="collection-image img-style">
+                                                                {% if show.first_image %}
                                                                 <img class="lazyload"
-                                                                    data-src="{% static 'images/collections/collection-2.jpg' %}"
-                                                                    src="{% static 'images/collections/collection-2.jpg' %}"
-                                                                    alt="collection-demo-1">
+                                                                    data-src="{{ show.first_image.image.url }}"
+                                                                    src="{{ show.first_image.image.url }}"
+                                                                    alt="{{ show.name }}">
+                                                                {% endif %}
                                                             </a>
-                                                            <div class="collection-content">
-                                                                <a href="shop-women.html"
-                                                                    class="tf-btn btn-xl collection-title fs-16 hover-icon"><span>Women</span><i
-                                                                        class="icon icon-arrow1-top-left"></i></a>
-                                                            </div>
+                                                            
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                               
+
+
+                                                {% endfor %}  <!-- end of trunk shows loop -->
+                                                
+
+
 
                                                 {% endif %}
 

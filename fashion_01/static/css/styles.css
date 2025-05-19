@@ -15251,6 +15251,13 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle {
 .tf-compare-item .price .price-on-sale {
   color: var(--primary);
 }
+
+.price-on-sale.custom-dark {
+  color: #333;
+}
+
+
+
 .tf-compare-item .tf-compare-group-btns {
   margin-top: 21px;
   margin-bottom: 24px;

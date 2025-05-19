@@ -18,6 +18,7 @@ class VariationOption(models.Model):
     order = models.PositiveIntegerField(default=0)
     included_by_default = models.BooleanField(default=False) # Optional
     image = models.ImageField(upload_to='variation_options/%Y/%m/%d/', blank=True, null=True)
+    price_difference = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     
     class Meta:
         unique_together = ('type', 'name')

@@ -12,7 +12,7 @@ class MainCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['main_category', 'admin_thumbnail', 'name', 'slug']
+    list_display = ['main_category', 'admin_thumbnail', 'name', 'slug', 'is_active']
     prepopulated_fields = {'slug': ('name',)}
     
     ordering = ['main_category', 'name']

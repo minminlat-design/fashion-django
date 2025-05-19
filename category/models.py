@@ -28,6 +28,7 @@ class Category(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     image = models.ImageField(upload_to='category/%Y/%m/%d', blank=True)
     name_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     
     class Meta:
         ordering = ['name_order', 'name']

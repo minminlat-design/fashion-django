@@ -131,6 +131,7 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     monogram_price = None
     vest_price = None
     shirt_price = None
+    
 
     set_items = []
     
@@ -150,20 +151,23 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         if vtype.name.lower() == "monogram" and monogram_price is None:
             monogram_price = variation.price_difference
             
+        
+            
         # Extract Vest price
         if vtype.name.lower() == "vest" and option.name.lower() == "vest" and vest_price is None:
             vest_price = variation.price_difference
             
-        # Extract Vest price
+        # Extract Shirt price
         if vtype.name.lower() == "shirt" and option.name.lower() == "shirt" and shirt_price is None:
             shirt_price = variation.price_difference
 
         # If this is the "Set Items" variation type (e.g., Jacket, Pants, Shirt), collect it
         if vtype.name.lower() == 'set items':
             set_items_unsorted.append(option)
+            
         else:
             for target in vtype.target_items.all():
-                key = slugify(vtype.name).replace('-', '_')  # e.g., lapel
+                key = slugify(vtype.name).replace('-', ' ')  # e.g., lapel
                 target_name = target.name.strip().lower()
                 print(f"{target_name}- {key} -> {option.name}")
                 customization_by_target[target.name.lower()][key].append(option)
@@ -180,7 +184,13 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         remaining = (product.countdown_end - timezone.now()).total_seconds()
         timer = max(int(remaining), 0)
         
-    monogram_keys = ["monogram_style", "monogram_color", "monogram_placement"]
+    monogram_keys = ["monogram_style", "monogram_color", "monogram_placement", "shirt_monogram_placement",
+                     "shirt_monogram_color", "shirt_monogram_style"]
+    
+    print (f"{monogram_keys}")
+    
+    
+    
 
     context = {
         'product': product,
@@ -195,9 +205,12 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
         'variations': variations,  # To check "included_by_default" in the template
         'product_pieces': product_pieces,
         'monogram_keys': monogram_keys,
+        
         'monogram_price': monogram_price or 0,
+        
         'vest_price': vest_price or 0,
         'shirt_price': shirt_price or 0,
+        
     }
     
     # Determine which item pieces are included in this product

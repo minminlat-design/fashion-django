@@ -1,5 +1,16 @@
 asgiref==3.8.1
+cffi==1.17.1
+cryptography==42.0.8
 Django==5.2
+django-admin-sortable2==2.2.6
+django-ckeditor==6.7.2
+django-extensions==3.2.3
+django-js-asset==3.1.2
+easy-thumbnails==2.10
+MarkupSafe==3.0.2
 pillow==11.2.1
+pycparser==2.22
+pyOpenSSL==24.1.0
 sqlparse==0.5.3
 tzdata==2025.2
+Werkzeug==3.0.2

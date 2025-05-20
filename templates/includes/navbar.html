@@ -179,7 +179,7 @@
                                                                             
                                                                         </div>
                                                                         <div class="card-product-info">
-                                                                            <a href="#" class="title link">{{ product.name }}</a>
+                                                                            <a href="{{ product.get_absolute_url }}" class="title link">{{ product.name }}</a>
                                                                             <span class="price">
                                                                                 {% if product.discounted_price %}
                                                                                 <del>${{ product.price }}</del> ${{ product.discounted_price }}
@@ -228,7 +228,7 @@
                                                                 {% endif %}
                                                             </a>
                                                             <div class="collection-content">
-                                                                <a href="shop-men.html"
+                                                                <a href="{{ category.get_absolute_url }}"
                                                                     class="tf-btn hover-icon btn-xl collection-title fs-16"><span>{{ category.name }}</span><i
                                                                         class="icon icon-arrow1-top-left"></i></a>
 

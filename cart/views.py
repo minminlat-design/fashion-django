@@ -61,6 +61,9 @@ def cart_detail(request):
     cart = Cart(request)
     free_shipping_data = cart.get_free_shipping_data()
     
+    # Provide gift_wrap status explicitly
+    gift_wrap_status = cart.gift_wrap
+    
     # Updating the quantities
     for item in cart:
         item['update_quantity_form'] = CartAddProductForm(
@@ -69,6 +72,7 @@ def cart_detail(request):
     return render(request, 'cart/detail.html', {
         'cart': cart,
         'free_shipping_data': free_shipping_data,
+        'gift_wrap': gift_wrap_status,
     })
 
 

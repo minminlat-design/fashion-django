@@ -150,488 +150,453 @@
 
                                     
                                                
-<form action="{% url 'cart:cart_add' product.id %}" method="post">
-                                             {% csrf_token %}
-                                             {{ cart_product_form.override }}
-                                                
+                  <form action="{% url 'cart:cart_add' product.id %}" method="post">
+                    <div style="display: none;">
+                        {{ cart_product_form }}
+                    </div>
+                        {% csrf_token %}
+                                                                        
   
 
-  <!-- Included Items Info -->
-  {% if product.pieces.exists %}
-    <div class="included-items mb-2">
-      <h6><strong>Included Items:</strong>
-      {{ product.pieces.all|join:", " }}
-      </h6>
-    </div>
-  {% endif %}
-
-  <!-- Set Items Dropdown -->
-  {% if set_items %}
-    <label for="set-items">Select To Customize</label>
-    <select name="set_items" id="set-items" class="form-select border-dark">
-      {% for option in set_items %}
-        <option 
-          value="{{ option.id }}" 
-          data-price="{{ option.price_difference }}" 
-          data-target="{{ option.name|lower }}"
-          {% if option.included_by_default %}selected{% endif %}>
-          {{ option.name }}
-        </option>
-      {% endfor %}
-    </select>
-  {% endif %}
-
-  <!-- Customize Toggle -->
-  <div class="mt-2">
-    <button type="button" id="customize-toggle" class="btn btn-dark">
-      CUSTOMIZE
-    </button>
-  </div>
-  <br/>
-
-  <!-- Customization Fields -->
-  <div id="customization-fields" style="display: none; margin-top: 15px;">
-    {% for target_item, option_groups in customizations.items %}
-  <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
-    <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
-
-    {% for key, options in option_groups.items %}
-      {% if key not in monogram_keys %}
-        <div class="variation-accordion mb-3">
-          <button class="btn btn-outline-secondary w-100 text-start variation-toggle" type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#variation-{{ target_item }}-{{ key|slugify }}"
-                  aria-expanded="false">
-            {{ key|title }}
-          </button>
-
-          <div class="collapse mt-2 {% if forloop.first %}show{% endif %}" id="variation-{{ target_item }}-{{ key|slugify }}">
-            <div class="row g-3 mt-2">
-              {% for option in options %}
-                <div class="col-6 col-sm-4 col-md-3">
-                  <label class="w-100 text-center border rounded p-2 d-flex flex-column align-items-center justify-content-between h-100">
-                    <input type="radio" 
-                          name="{{ target_item }}_{{ key }}" 
-                          value="{{ option.id }}" 
-                          data-price="{{ option.price_difference }}"
-                          {% if option.included_by_default %}checked{% endif %}
-                          class="visually-hidden variation-radio">
-
-                    {% if option.image %}
-                      <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 140px;">
-                    {% else %}
-                      <div class="bg-secondary text-white p-2 mb-2">No Image</div>
-                    {% endif %}
-
-                    <div class="small">
-                        {{ option.name }}
-                        {% if option.price_difference %}
-                            <span class="text-muted">(+{{ option.price_difference }} {{ currency_symbol|default:"$" }})</span>
-                        {% endif %}
-                    </div>
-
-                    
-                  </label>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      {% endif %}
-    {% endfor %}
-
-    
-
-    {% if target_item|lower == "jacket" %}
-      <!-- MONOGRAM OPTIONS (Only for Jacket) -->
-
-        <!-- monogram checkbox -->
-        <div class="form-check my-3">
-            <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
-            <label class="form-check-label" for="enable-jacket-monogram">
-            Add Monogram (+${{ monogram_price }})
-            </label>
-        </div>
-    
-
-        <div id="jacket-monogram-fields" style="display: none;">
-            <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="initials-tab" data-bs-toggle="tab" data-bs-target="#initials" type="button" role="tab">
-                Initials
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#style" type="button" role="tab">
-                Style
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#color" type="button" role="tab">
-                Color
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#placement" type="button" role="tab">
-                Placement
-                </button>
-            </li>
-            </ul>
-
-            <div class="tab-content border rounded p-3" id="monogramTabContent">
-
-                    <!-- Initials -->
-            <div class="tab-pane fade show active" id="initials" role="tabpanel">
-                <label for="jacket_monogram_text" class="form-label">Enter Initials (max 10 characters):</label>
-                <input type="text" maxlength="10" name="jacket_monogram_text" id="jacket_monogram_text" class="form-control">
-            </div>
-
-     
-
-
-            <!-- Style -->
-            <div class="tab-pane fade" id="style" role="tabpanel">
-                
-                {% with target_customizations=customizations|get_item:"monogram" %}
-                {% with monogram_style=target_customizations|get_item:"monogram style" %}
-                    {% if monogram_style %}
-                    {% for option in monogram_style %}
-                        <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jacket_monogram_style" id="style-{{ option.id }}" value="{{ option.id }}" >
-                        <label class="form-check-label" for="style-{{ option.id }}">
-                            {{ option.name }}
-                        </label>
-                        </div>
-                    {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% endwith %}
-            </div>
-
-            <!-- Color -->
-            <div class="tab-pane fade" id="color" role="tabpanel">
-                {% with target_customizations=customizations|get_item:"monogram" %}
-                {% with monogram_color=target_customizations|get_item:"monogram color" %}
-                    {% if monogram_color %}
-                    {% for option in monogram_color %}
-                        <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jacket_monogram_color" id="color-{{ option.id }}" value="{{ option.id }}">
-                        <label class="form-check-label" for="color-{{ option.id }}">
-                            {{ option.name }}
-                        </label>
-                        </div>
-                    {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% endwith %}
-            </div>
-
-            <!-- Placement -->
-            <div class="tab-pane fade" id="placement" role="tabpanel">
-                {% with target_customizations=customizations|get_item:"monogram" %}
-                {% with monogram_placement=target_customizations|get_item:"monogram placement" %}
-                    {% if monogram_placement %}
-                    {% for option in monogram_placement %}
-                        <div class="form-check">
-                        <input class="form-check-input" type="radio" name="jacket_monogram_placement" id="placement-{{ option.id }}" value="{{ option.id }}">
-                        <label class="form-check-label" for="placement-{{ option.id }}">
-                            {{ option.name }}
-                        </label>
-                        </div>
-                    {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% endwith %}
-            </div>
-
-            </div>
-        </div>
-        {% endif %}
-
-
-
-
-
-
-        {% if target_item|lower == "shirt" %}
-      <!-- MONOGRAM OPTIONS (Only for Shirt) -->
-
-        <!-- monogram checkbox -->
-        <div class="form-check my-3">
-            <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
-            <label class="form-check-label" for="enable-shirt-monogram">
-            Add Monogram (+${{ monogram_price }})
-            </label>
-        </div>
-    
-
-        <div id="shirt-monogram-fields" style="display: none;">
-            <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="initials-tab" data-bs-toggle="tab" data-bs-target="#initials" type="button" role="tab">
-                Initials
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#style" type="button" role="tab">
-                Style
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#color" type="button" role="tab">
-                Color
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#placement" type="button" role="tab">
-                Placement
-                </button>
-            </li>
-            </ul>
-
-            <div class="tab-content border rounded p-3" id="monogramTabContent">
-
-                    <!-- Initials -->
-            <div class="tab-pane fade show active" id="initials" role="tabpanel">
-                <label for="jacket_monogram_text" class="form-label">Enter Initials (max 5 characters):</label>
-                <input type="text" maxlength="5" name="shirt_monogram_text" id="shirt_monogram_text" class="form-control">
-            </div>
-
-     
-
-
-           <!-- Style -->
-            <div class="tab-pane fade" id="style" role="tabpanel">
-                {% with monogram_data=customizations|get_item:"monogram" %}
-                    {% with monogram_style=monogram_data|get_item:"shirt monogram style" %}
-                        {% if monogram_style %}
-                            <div class="d-flex flex-wrap gap-3">
-                                {% for option in monogram_style %}
-                                    <div class="form-check text-center">
-                                        <input class="form-check-input d-none" type="radio" name="shirt_monogram_style" id="style-{{ option.id }}" value="{{ option.id }}">
-                                        <label class="form-check-label" for="style-{{ option.id }}">
-                                            <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-thumbnail" style="width: 80px; height: auto;">
-                                            <div class="mt-1">{{ option.name }}</div>
-                                        </label>
-                                    </div>
-                                {% endfor %}
+                        <!-- Included Items Info -->
+                        {% if product.pieces.exists %}
+                            <div class="included-items mb-2">
+                            <h6><strong>Included Items:</strong>
+                            {{ product.pieces.all|join:", " }}
+                            </h6>
                             </div>
                         {% endif %}
-                    {% endwith %}
-                {% endwith %}
-            </div>
 
-
-            <!-- Color -->
-            <div class="tab-pane fade" id="color" role="tabpanel">
-                {% with monogram_data=customizations|get_item:"monogram" %}
-                    {% with monogram_color=monogram_data|get_item:"shirt monogram color" %}
-                        {% if monogram_color %}
-                            <div class="d-flex flex-wrap gap-3">
-                                {% for option in monogram_color %}
-                                    <div class="form-check text-center">
-                                        <input class="form-check-input d-none" type="radio" name="shirt_monogram_color" id="color-{{ option.id }}" value="{{ option.id }}">
-                                        <label class="form-check-label" for="color-{{ option.id }}">
-                                            <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-thumbnail" style="width: 40px; height: 40px; border-radius: 50%;">
-                                            <div class="mt-1">{{ option.name }}</div>
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
+                        <!-- Set Items Dropdown -->
+                        {% if set_items %}
+                            <label for="set-items">Select To Customize</label>
+                            <select name="set_items" id="set-items" class="form-select border-dark">
+                            {% for option in set_items %}
+                                <option 
+                                value="{{ option.id }}" 
+                                data-price="{{ option.price_difference }}" 
+                                data-target="{{ option.name|lower }}"
+                                {% if option.included_by_default %}selected{% endif %}>
+                                {{ option.name }}
+                                </option>
+                            {% endfor %}
+                            </select>
                         {% endif %}
-                    {% endwith %}
-                {% endwith %}
-            </div>
 
-
-
-            <!-- Placement -->
-            <div class="tab-pane fade" id="placement" role="tabpanel">
-                {% with monogram_data=customizations|get_item:"monogram" %}
-                {% with placement_options=monogram_data|get_item:"shirt monogram placement" %}
-                    {% if placement_options %}
-                    {% for option in placement_options %}
-                        <div class="form-check">
-                        <input class="form-check-input" type="radio" name="shirt_monogram_placement" id="placement-{{ option.id }}" value="{{ option.id }}">
-                        <label class="form-check-label" for="placement-{{ option.id }}">
-                            {{ option.name }}
-                        </label>
+                        <!-- Customize Toggle -->
+                        <div class="mt-2">
+                            <button type="button" id="customize-toggle" class="btn btn-dark">
+                            CUSTOMIZE
+                            </button>
                         </div>
-                    {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                {% endwith %}
+                        <br/>
 
-            </div>
+                        <!-- Customization Fields -->
+                        <div id="customization-fields" style="display: none; margin-top: 15px;">
+                            {% for target_item, option_groups in customizations.items %}
+                        <div class="customization-group" data-target="{{ target_item }}" style="display: none;">
+                            <h5 class="mt-3 text-capitalize">{{ target_item }} Customizations</h5>
+
+                            {% for key, options in option_groups.items %}
+                            {% if key not in monogram_keys %}
+                                <div class="variation-accordion mb-3">
+                                <button class="btn btn-outline-secondary w-100 text-start variation-toggle" type="button"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#variation-{{ target_item }}-{{ key|slugify }}"
+                                        aria-expanded="false">
+                                    {{ key|title }}
+                                </button>
+
+                                <div class="collapse mt-2 {% if forloop.first %}show{% endif %}" id="variation-{{ target_item }}-{{ key|slugify }}">
+                                    <div class="row g-3 mt-2">
+                                    {% for option in options %}
+                                        <div class="col-6 col-sm-4 col-md-3">
+                                        <label class="w-100 text-center border rounded p-2 d-flex flex-column align-items-center justify-content-between h-100">
+                                            <input type="radio" 
+                                                name="{{ target_item }}_{{ key }}" 
+                                                value="{{ option.id }}" 
+                                                data-price="{{ option.price_difference }}"
+                                                {% if option.included_by_default %}checked{% endif %}
+                                                class="visually-hidden variation-radio">
+
+                                            {% if option.image %}
+                                            <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 140px;">
+                                            {% else %}
+                                            <div class="bg-secondary text-white p-2 mb-2">No Image</div>
+                                            {% endif %}
+
+                                            <div class="small">
+                                                {{ option.name }}
+                                                {% if option.price_difference %}
+                                                    <span class="text-muted">(+{{ option.price_difference }} {{ currency_symbol|default:"$" }})</span>
+                                                {% endif %}
+                                            </div>
+
+                                            
+                                        </label>
+                                        </div>
+                                    {% endfor %}
+                                    </div>
+                                </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+
+    
+
+                            {% if target_item|lower == "jacket" %}
+                            <!-- MONOGRAM OPTIONS (Only for Jacket) -->
+
+                                <!-- monogram checkbox -->
+                                <div class="form-check my-3">
+                                    <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
+                                    <label class="form-check-label" for="enable-jacket-monogram">
+                                    Add Monogram (+${{ monogram_price }})
+                                    </label>
+                                </div>
+                            
+
+                                <div id="jacket-monogram-fields" style="display: none;">
+                                    <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="jacket-initials-tab" data-bs-toggle="tab" data-bs-target="#jacket-initials" type="button" role="tab">
+                                        Initials
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#jacket-style" type="button" role="tab">
+                                        Style
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#jacket-color" type="button" role="tab">
+                                        Color
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#jacket-placement" type="button" role="tab">
+                                        Placement
+                                        </button>
+                                    </li>
+                                    </ul>
+
+                                    <div class="tab-content border rounded p-3" id="monogramTabContent">
+
+                                            <!-- Initials -->
+                                    <div class="tab-pane fade show active" id="jacket-initials-tab" data-bs-target="#jacket-initials" role="tabpanel">
+                                        <label for="jacket_monogram_text" class="form-label">Enter Initials (max 10 characters):</label>
+                                        <input type="text" maxlength="10" name="jacket_monogram_text" id="jacket_monogram_text" class="form-control">
+                                    </div>
+
+                            
+
+
+                                    <!-- Style -->
+                                    <div class="tab-pane fade" id="jacket-style" role="tabpanel">
+                                        
+                                        {% with target_customizations=customizations|get_item:"monogram" %}
+                                        {% with monogram_style=target_customizations|get_item:"monogram style" %}
+                                            {% if monogram_style %}
+                                            {% for option in monogram_style %}
+                                                <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="jacket_monogram_style" id="jacket-style-{{ option.id }}" value="{{ option.id }}" >
+                                                <label class="form-check-label" for="style-{{ option.id }}">
+                                                    {{ option.name }}
+                                                </label>
+                                                </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+                                    </div>
+
+                                    <!-- Color -->
+                                    <div class="tab-pane fade" id="jacket-color" role="tabpanel">
+                                        {% with target_customizations=customizations|get_item:"monogram" %}
+                                        {% with monogram_color=target_customizations|get_item:"monogram color" %}
+                                            {% if monogram_color %}
+                                            {% for option in monogram_color %}
+                                                <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="jacket_monogram_color" id="jacket-color-{{ option.id }}" value="{{ option.id }}">
+                                                <label class="form-check-label" for="color-{{ option.id }}">
+                                                    {{ option.name }}
+                                                </label>
+                                                </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+                                    </div>
+
+                                    <!-- Placement -->
+                                    <div class="tab-pane fade" id="jacket-placement" role="tabpanel">
+                                        {% with target_customizations=customizations|get_item:"monogram" %}
+                                        {% with monogram_placement=target_customizations|get_item:"monogram placement" %}
+                                            {% if monogram_placement %}
+                                            {% for option in monogram_placement %}
+                                                <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="jacket_monogram_placement" id="jacket-placement-{{ option.id }}" value="{{ option.id }}">
+                                                <label class="form-check-label" for="placement-{{ option.id }}">
+                                                    {{ option.name }}
+                                                </label>
+                                                </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+                                    </div>
+
+                                    </div>
+                                </div>
+                                {% endif %}
+
+
+
+
+
+
+                                {% if target_item|lower == "shirt" %}
+                            <!-- MONOGRAM OPTIONS (Only for Shirt) -->
+
+                                <!-- monogram checkbox -->
+                                <div class="form-check my-3">
+                                    <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
+                                    <label class="form-check-label" for="enable-shirt-monogram">
+                                    Add Monogram (+${{ monogram_price }})
+                                    </label>
+                                </div>
+    
+
+                                <div id="shirt-monogram-fields" style="display: none;">
+                                    <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="shirt_initials_tab" data-bs-toggle="tab" data-bs-target="#shirt-initials" type="button" role="tab">
+                                        Initials
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#shirt-style" type="button" role="tab">
+                                        Style
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#shirt-color" type="button" role="tab">
+                                        Color
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#shirt-placement" type="button" role="tab">
+                                        Placement
+                                        </button>
+                                    </li>
+                                    </ul>
+
+                                    <div class="tab-content border rounded p-3" id="monogramTabContent">
+
+                                            <!-- Initials -->
+                                    <div class="tab-pane fade show active" id="shirt_initials_tab" data-bs-target="#shirt-initials" role="tabpanel">
+                                        <label for="shirt_monogram_text" class="form-label">Enter Initials (max 5 characters):</label>
+                                        <input type="text" maxlength="5" name="shirt_monogram_text" id="shirt_monogram_text" class="form-control">
+                                    </div>
+
+                            
+
+
+                                <!-- Style -->
+                                    <div class="tab-pane fade" id="shirt-style" role="tabpanel">
+                                        {% with monogram_data=customizations|get_item:"monogram" %}
+                                            {% with monogram_style=monogram_data|get_item:"shirt monogram style" %}
+                                                {% if monogram_style %}
+                                                    <div class="d-flex flex-wrap gap-3">
+                                                        {% for option in monogram_style %}
+                                                            <div class="form-check text-center">
+                                                                <input class="form-check-input d-none" type="radio" name="shirt_monogram_style" id="shirt-style-{{ option.id }}" value="{{ option.id }}">
+                                                                <label class="form-check-label" for="style-{{ option.id }}">
+                                                                    <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-thumbnail" style="width: 80px; height: auto;">
+                                                                    <div class="mt-1">{{ option.name }}</div>
+                                                                </label>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </div>
+
+
+                                    <!-- Color -->
+                                    <div class="tab-pane fade" id="shirt-color" role="tabpanel">
+                                        {% with monogram_data=customizations|get_item:"monogram" %}
+                                            {% with monogram_color=monogram_data|get_item:"shirt monogram color" %}
+                                                {% if monogram_color %}
+                                                    <div class="d-flex flex-wrap gap-3">
+                                                        {% for option in monogram_color %}
+                                                            <div class="form-check text-center">
+                                                                <input class="form-check-input d-none" type="radio" name="shirt_monogram_color" id="shirt-color-{{ option.id }}" value="{{ option.id }}">
+                                                                <label class="form-check-label" for="color-{{ option.id }}">
+                                                                    <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-thumbnail" style="width: 40px; height: 40px; border-radius: 50%;">
+                                                                    <div class="mt-1">{{ option.name }}</div>
+                                                                </label>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </div>
+
+
+
+                                    <!-- Placement -->
+                                    <div class="tab-pane fade" id="shirt-placement" role="tabpanel">
+                                        {% with monogram_data=customizations|get_item:"monogram" %}
+                                        {% with placement_options=monogram_data|get_item:"shirt monogram placement" %}
+                                            {% if placement_options %}
+                                            {% for option in placement_options %}
+                                                <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="shirt_monogram_placement" id="shirt-placement-{{ option.id }}" value="{{ option.id }}">
+                                                <label class="form-check-label" for="placement-{{ option.id }}">
+                                                    {{ option.name }}
+                                                </label>
+                                                </div>
+                                            {% endfor %}
+                                            {% endif %}
+                                        {% endwith %}
+                                        {% endwith %}
+
+                                    </div>
 
             
 
 
-            </div>
-        </div>
-        {% endif %}
-
-
-
-        
-    
+                                        </div>
+                                    </div>
+                                    {% endif %}
 
     
 
-  </div> <!-- ← closes .customization-group -->
-{% endfor %}
+                                    </div> <!-- ← closes .customization-group -->
+                                    {% endfor %}
 
-</div> <!-- closes #customization-fields -->
-
-
-
-{% if not is_shirt_product %}
-
-<!-- VEST TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
-<div class="form-check my-4">
-  <input type="checkbox" class="form-check-input custom-checkbox" id="enable-vest-customization" data-price="{{ vest_price }}">
-  <label class="form-check-label" for="enable-vest-customization">
-    Add a Vest (+${{ vest_price }})
-  </label>
-</div>
-
-<div id="vest-customization-fields" style="display: none;">
-  <div class="card border shadow-sm">
-    <div class="card-header bg-light">
-      <strong>Vest</strong>
-    </div>
-    <div class="card-body">
-      {% with target_customizations=customizations|get_item:"vest" %}
-        {% with vest_style=target_customizations|get_item:"vest" %}
-          {% if vest_style %}
-            <div class="mb-3">
-              <label class="form-label">Vest Style:</label>
-              <div class="row g-3">
-                {% for option in vest_style %}
-                  <div class="col-6 col-md-4 col-lg-3">
-                    <div class="border rounded p-2 text-center h-100">
-                      <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}">
-                      <label class="form-check-label d-block" for="vest-style-{{ option.id }}">
-                        {% if option.image %}
-                          <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px; cursor: zoom-in;" onclick="showZoomModal(this)">
-                        {% else %}
-                          <div class="bg-light border rounded p-3 mb-2">No Image</div>
-                        {% endif %}
-                        <div>{{ option.name }}</div>
-                      </label>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-          {% endif %}
-        {% endwith %}
-      {% endwith %}
-    </div>
-  </div>
-</div>
-
-
-<!-- Shirt TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
-<div class="form-check my-4">
-  <input type="checkbox" class="form-check-input custom-checkbox" id="enable-shirt-customization" data-price="{{ shirt_price }}">
-  <label class="form-check-label" for="enable-shirt-customization">
-    Add a Shirt (+${{ shirt_price }})
-  </label>
-</div>
-
-<div id="shirt-customization-fields" style="display: none;">
-  <div class="card border shadow-sm">
-    <div class="card-header bg-light">
-      <strong>Shirt</strong>
-    </div>
-    <div class="card-body">
-      {% with target_customizations=customizations|get_item:"shirt" %}
-        {% with shirt_style=target_customizations|get_item:"shirt" %}
-          {% if shirt_style %}
-            <div class="mb-3">
-              <label class="form-label">Shirt Options:</label>
-              <div class="row g-3">
-                {% for option in shirt_style %}
-                  <div class="col-6 col-md-4 col-lg-3">
-                    <div class="border rounded p-2 text-center h-100">
-                      <input class="form-check-input d-block mx-auto mb-2" type="radio" name="shirt_style" id="shirt-style-{{ option.id }}" value="{{ option.id }}" data-price="{{ option.price }}">
-                      <label class="form-check-label d-block" for="shirt-style-{{ option.id }}">
-                        {% if option.image %}
-                          <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px; cursor: zoom-in;" onclick="showZoomModal(this)">
-                        {% else %}
-                          <div class="bg-light border rounded p-3 mb-2">No Image</div>
-                        {% endif %}
-                        <div>{{ option.name }}</div>
-                      </label>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
-          {% endif %}
-        {% endwith %}
-      {% endwith %}
-    </div>
-  </div>
-</div>
-
-{% endif %}
-
-<!-- Total Price and Submit -->
-{% comment %}
-<div class="mt-3">
-  <strong>Total Price:</strong>
-  <span id="total-price">{{ product.price }}</span> {{ currency_symbol|default:"$" }}
-</div>
-
-
-<button type="submit" class="btn btn-success mt-2">Add to Cart</button>
-{% endcomment %}
+                                    </div> <!-- closes #customization-fields -->
 
 
 
+                                        {% if not is_shirt_product %}
+
+                                        <!-- VEST TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
+                                        <div class="form-check my-4">
+                                        <input type="checkbox" class="form-check-input custom-checkbox" id="enable-vest-customization" data-price="{{ vest_price }}">
+                                        <label class="form-check-label" for="enable-vest-customization">
+                                            Add a Vest (+${{ vest_price }})
+                                        </label>
+                                        </div>
+
+                                        <div id="vest-customization-fields" style="display: none;">
+                                        <div class="card border shadow-sm">
+                                            <div class="card-header bg-light">
+                                            <strong>Vest</strong>
+                                            </div>
+                                            <div class="card-body">
+                                            {% with target_customizations=customizations|get_item:"vest" %}
+                                                {% with vest_style=target_customizations|get_item:"vest" %}
+                                                {% if vest_style %}
+                                                    <div class="mb-3">
+                                                    <label class="form-label">Vest Style:</label>
+                                                    <div class="row g-3">
+                                                        {% for option in vest_style %}
+                                                        <div class="col-6 col-md-4 col-lg-3">
+                                                            <div class="border rounded p-2 text-center h-100">
+                                                            <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}">
+                                                            <label class="form-check-label d-block" for="vest-style-{{ option.id }}">
+                                                                {% if option.image %}
+                                                                <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px; cursor: zoom-in;" onclick="showZoomModal(this)">
+                                                                {% else %}
+                                                                <div class="bg-light border rounded p-3 mb-2">No Image</div>
+                                                                {% endif %}
+                                                                <div>{{ option.name }}</div>
+                                                            </label>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    </div>
+                                                {% endif %}
+                                                {% endwith %}
+                                            {% endwith %}
+                                            </div>
+                                        </div>
+                                        </div>
 
 
+                                        <!-- Shirt TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
+                                        <div class="form-check my-4">
+                                        <input type="checkbox" class="form-check-input custom-checkbox" id="enable-shirt-customization" data-price="{{ shirt_price }}">
+                                        <label class="form-check-label" for="enable-shirt-customization">
+                                            Add a Shirt (+${{ shirt_price }})
+                                        </label>
+                                        </div>
 
-<!-- js script go to base.html -->
+                                        <div id="shirt-customization-fields" style="display: none;">
+                                        <div class="card border shadow-sm">
+                                            <div class="card-header bg-light">
+                                            <strong>Shirt</strong>
+                                            </div>
+                                            <div class="card-body">
+                                            {% with target_customizations=customizations|get_item:"shirt" %}
+                                                {% with shirt_style=target_customizations|get_item:"shirt" %}
+                                                {% if shirt_style %}
+                                                    <div class="mb-3">
+                                                    <label class="form-label">Shirt Options:</label>
+                                                    <div class="row g-3">
+                                                        {% for option in shirt_style %}
+                                                        <div class="col-6 col-md-4 col-lg-3">
+                                                            <div class="border rounded p-2 text-center h-100">
+                                                            <input class="form-check-input d-block mx-auto mb-2" type="radio" name="shirt_style" id="shirt-style-{{ option.id }}" value="{{ option.id }}" data-price="{{ option.price }}">
+                                                            <label class="form-check-label d-block" for="shirt-style-{{ option.id }}">
+                                                                {% if option.image %}
+                                                                <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px; cursor: zoom-in;" onclick="showZoomModal(this)">
+                                                                {% else %}
+                                                                <div class="bg-light border rounded p-3 mb-2">No Image</div>
+                                                                {% endif %}
+                                                                <div>{{ option.name }}</div>
+                                                            </label>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    </div>
+                                                {% endif %}
+                                                {% endwith %}
+                                            {% endwith %}
+                                            </div>
+                                        </div>
+                                        </div>
 
-
-
-
-
+                                        {% endif %}
                                        
                                         </div>
                                     </div>
-                                    <br/>
-
-                                    
-
-                                    
-                                
+                                    <br/>                               
                                    
                                     
-                                    <div class="tf-product-info-buy-button">
-                                                                            
-                                    
-                                          
-
+                                    <div class="tf-product-info-buy-button">        
+                                        <button type="submit" class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart">
                                             
-                                                
-                                                <button type="submit" class="tf-btn btn-fill justify-content-center fw-6 fs-16 flex-grow-1 animate-hover-btn btn-add-to-cart">
-                                                    <span>Add to cart -&nbsp;</span>
-                                                    <span class="tf-qty-price total-price" id="total-price">
+                                            <span>Add to cart -&nbsp;</span>
+                                             <span class="tf-qty-price total-price" id="total-price">
                                                         {% if product.discounted_price %}
                                                             {{ product.discounted_price }}
                                                         {% else %}
                                                             {{ product.price }}
                                                         {% endif %}
                                                     </span>
-                                                </button>
+                                        </button>
                                                 <br/><br/>
 
                                             
-                                            
+                                           
+
                                             
                                             <button type="submit"
                                                 class="tf-product-btn-wishlist hover-tooltip box-icon bg_white wishlist btn-icon-action">
@@ -643,7 +608,7 @@
                                                
                                             
                                             
-                                        </form> <!-- ← your missing form closing tag -->
+                                    </form> <!--  form closing tag -->
 
 
                                     </div>

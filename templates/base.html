@@ -257,7 +257,28 @@ document.addEventListener("DOMContentLoaded", function () {
   calculateTotal();
 });
 
+
+
+
 </script>
+
+
+
+
+<script>
+  const form = document.querySelector("form");  // if there is only one form on the page
+
+
+if (form) {
+  form.addEventListener("submit", function(e) {
+    console.log("Form submitted");
+  });
+} else {
+  console.warn("Form element not found!");
+}
+
+</script>
+
 
     
 

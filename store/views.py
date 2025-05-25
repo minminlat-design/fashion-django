@@ -10,6 +10,7 @@ from variation.models import VariationType
 
 
 
+
 def store(request, main_slug=None, category_slug=None, subcategory_slug=None):
     main_category = None
     category = None

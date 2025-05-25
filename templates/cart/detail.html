@@ -23,14 +23,8 @@ Your shopping cart
                 <div class="tf-page-cart-wrap">
                     <div class="tf-page-cart-item">
 
-                        {% if not cart %}
-                             <div style="text-align:center;">
-                                    <h5>Your cart is empty!</h5>
-                             </div>
-
-                                    {% else %}
-
-                        
+                        <div class="tf-page-cart-item">
+                    
                             <table class="tf-table-page-cart">
                                 <thead>
                                     <tr>
@@ -41,101 +35,128 @@ Your shopping cart
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    
-                                    {% for item in cart %}
-                                    {% with product=item.product %}
-                                    <tr class="tf-cart-item file-delete">
-                                        <td class="tf-cart-item_product">
-                                            <a href="{{ product.get_absolute_url }}" class="img-box">
-                                                {% with image=product.first_image %}
-                                                    <img src="{% if image %}{{ image.image.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" alt="img-product">
-                                                {% endwith %}
-                                            </a>
-                                            <div class="cart-info">
-                                                <a href="product-detail.html" class="cart-title link">{{ product.name }}</a>
-                                                <div class="cart-meta-variant">White / M</div>
-                                                
-                                                <form action="{% url 'cart:cart_remove' product.id %}" method="post">
-                                                 {% csrf_token %}
-                                                    <input type="submit" value="Remove" class="p-1 mt-2">
-                                                </form>   
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="tf-cart-item_price tf-variant-item-price" cart-data-title="Price">
-                                            <div class="cart-price price">${{ item.price }}</div>
-                                        </td>
 
-                                         
-                                        
-
-                                        
-                                     
-                                        
-                                            <td class="tf-cart-item_quantity" cart-data-title="Quantity">
-                                                <div class="cart-quantity">
-                                                    
-                                                    <form action="{% url 'cart:cart_add' product.id %}" method="post">
-                                                            {{ item.update_quantity_form.quantity }}
-                                                            {{ item.update_quantity_form.override }}
-                                                            <input type="submit" value="Update" class="form-control form-control-sm mt-1">
-                                                            {% csrf_token %}
-                                                    </form>
-                                                  
-                                                </div>
-                                            </td>
+                                 
+                             
                                     
-                                        
-                                        <td class="tf-cart-item_total tf-variant-item-total" cart-data-title="Total">
-                                            <div class="cart-total price">${{ item.total_price }}</div>
-                                        </td>
-                                    </tr>
-                                    {% endwith %}
-                                    {% endfor %}
+                                    
+                                    {% if cart %}
+    {% for item in cart %}
+        {% with product=item.product %}
+        <tr class="tf-cart-item file-delete" data-product-id="{{ product.id }}">
+            <td class="tf-cart-item_product">
+                <a href="{{ product.get_absolute_url }}" class="img-box">
+                    <img src="{% if product.first_image %}{{ product.first_image.image.url }}
+                             {% else %}{% static 'images/no_image.png' %}{% endif %}" 
+                         alt="{{ product.name }}">
+                </a>
+                <div class="cart-info">
+                    <a href="{{ product.get_absolute_url }}" class="cart-title link">
+                        {{ product.name }}
+                    </a>
+                    <div class="cart-meta-variant">White / M</div>
+                    <!-- ajax remove button -->
+
+                    <span class="remove-cart link remove"
+                        data-product-id="{{ product.id }}"
+                        data-url="{% url 'cart:cart_remove' product.id %}"
+                        data-csrf="{{ csrf_token }}">
+                        Remove
+                    </span>
+
+
+
+
+                </div>
+            </td>
+
+            <td class="tf-cart-item_price tf-variant-item-price" cart-data-title="Price">
+                <div class="cart-price price">${{ item.price|floatformat:2 }}</div>
+            </td>
+
+
+            
+
+           
+            
+            <td class="tf-cart-item_quantity" cart-data-title="Quantity">
+                <div class="cart-quantity">
+                    <div class="wg-quantity">
+                        <span class="btn-quantity btndecrease" data-id="{{ item.product.id }}">
+                            <svg width="9" height="1"><path d="M9 1H0V0H9V1Z"/></svg>
+                        </span>
+                        <input type="text" class="quantity-input" value="{{ item.quantity }}" readonly>
+                        <span class="btn-quantity btnincrease" data-id="{{ item.product.id }}">
+                            <svg width="9" height="9"><path d="M9 5.14H5.14V9H3.86V5.14H0V3.86H3.86V0H5.14V3.86H9V5.14Z"/></svg>
+                        </span>
+                    </div>
+                </div>
+            </td>
+            <td class="tf-cart-item_total tf-variant-item-total" cart-data-title="Total">
+                <div class="cart-total price">${{ item.total_price|floatformat:2 }}</div>
+            </td>
+        </tr>
+        {% endwith %}
+    {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">Your cart is empty.</td>
+        </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="4" class="text-center">Your cart is empty.</td>
+    </tr>
+{% endif %}
+
+                                   
 
                                     
                                 </tbody>
                             </table>
-                           
-
                             <div class="tf-page-cart-note">
                                 <label for="cart-note">Add Order Note</label>
                                 <textarea name="note" id="cart-note" placeholder="How can we help you?"></textarea>
                             </div>
+                   
+                    </div>
 
-                             {% endif %} <!-- if not cart and else -->
 
-                     
                     </div>
                     <div class="tf-page-cart-footer">
                         <div class="tf-cart-footer-inner">
                             <div class="tf-free-shipping-bar">
 
-                                <!-- progress shipping bar -->
-                                <div class="tf-progress-bar">
-                                    <span style="width: {{ free_shipping_data.progress }}%;">
-                                        <div class="progress-car">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="21" height="14"
-                                                viewBox="0 0 21 14" fill="currentColor">
-                                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                                    d="M0 0.875C0 0.391751 0.391751 0 0.875 0H13.5625C14.0457 0 14.4375 0.391751 14.4375 0.875V3.0625H17.3125C17.5867 3.0625 17.845 3.19101 18.0104 3.40969L20.8229 7.12844C20.9378 7.2804 21 7.46572 21 7.65625V11.375C21 11.8582 20.6082 12.25 20.125 12.25H17.7881C17.4278 13.2695 16.4554 14 15.3125 14C14.1696 14 13.1972 13.2695 12.8369 12.25H7.72563C7.36527 13.2695 6.39293 14 5.25 14C4.10706 14 3.13473 13.2695 2.77437 12.25H0.875C0.391751 12.25 0 11.8582 0 11.375V0.875ZM2.77437 10.5C3.13473 9.48047 4.10706 8.75 5.25 8.75C6.39293 8.75 7.36527 9.48046 7.72563 10.5H12.6875V1.75H1.75V10.5H2.77437ZM14.4375 8.89937V4.8125H16.8772L19.25 7.94987V10.5H17.7881C17.4278 9.48046 16.4554 8.75 15.3125 8.75C15.0057 8.75 14.7112 8.80264 14.4375 8.89937ZM5.25 10.5C4.76676 10.5 4.375 10.8918 4.375 11.375C4.375 11.8582 4.76676 12.25 5.25 12.25C5.73323 12.25 6.125 11.8582 6.125 11.375C6.125 10.8918 5.73323 10.5 5.25 10.5ZM15.3125 10.5C14.8293 10.5 14.4375 10.8918 14.4375 11.375C14.4375 11.8582 14.8293 12.25 15.3125 12.25C15.7957 12.25 16.1875 11.8582 16.1875 11.375C16.1875 10.8918 15.7957 10.5 15.3125 10.5Z">
-                                                </path>
-                                            </svg>
-                                        </div>
-                                    </span>
-                                </div>
 
-                                <!-- shipping free calculation -->
-                                <div class="tf-progress-msg">
-                                    {% if not free_shipping_data.qualified %}
-                                    Buy <span class="price fw-6">${{ free_shipping_data.remaining }}</span> more to enjoy <span class="fw-6">Free
-                                        Shipping</span>
-                                    {% else %}
-                                       <span class="fw-6"> You've unlocked Free Shipping!</span>
-                                    {% endif %}
-                                </div>
-                                
+                               
+
+
+                        <!-- Progress Bar Container -->
+                        <div class="tf-progress-bar" style="position: relative;">
+                            <div id="progress-fill" class="tf-progress-fill" style="width: 0%; height: 100%; background: #000; transition: width 0.3s;"></div>
+
+                            <div class="progress-car" style="position: absolute; top: 50%; left: 0%; transform: translate(-50%, -50%); transition: left 0.3s;">
+                                <!-- SVG Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="21" height="14" viewBox="0 0 21 14" fill="currentColor">
+                                    <path fill-rule="evenodd" clip-rule="evenodd"
+                                                                        d="M0 0.875C0 0.391751 0.391751 0 0.875 0H13.5625C14.0457 0 14.4375 0.391751 14.4375 0.875V3.0625H17.3125C17.5867 3.0625 17.845 3.19101 18.0104 3.40969L20.8229 7.12844C20.9378 7.2804 21 7.46572 21 7.65625V11.375C21 11.8582 20.6082 12.25 20.125 12.25H17.7881C17.4278 13.2695 16.4554 14 15.3125 14C14.1696 14 13.1972 13.2695 12.8369 12.25H7.72563C7.36527 13.2695 6.39293 14 5.25 14C4.10706 14 3.13473 13.2695 2.77437 12.25H0.875C0.391751 12.25 0 11.8582 0 11.375V0.875ZM2.77437 10.5C3.13473 9.48047 4.10706 8.75 5.25 8.75C6.39293 8.75 7.36527 9.48046 7.72563 10.5H12.6875V1.75H1.75V10.5H2.77437ZM14.4375 8.89937V4.8125H16.8772L19.25 7.94987V10.5H17.7881C17.4278 9.48046 16.4554 8.75 15.3125 8.75C15.0057 8.75 14.7112 8.80264 14.4375 8.89937ZM5.25 10.5C4.76676 10.5 4.375 10.8918 4.375 11.375C4.375 11.8582 4.76676 12.25 5.25 12.25C5.73323 12.25 6.125 11.8582 6.125 11.375C6.125 10.8918 5.73323 10.5 5.25 10.5ZM15.3125 10.5C14.8293 10.5 14.4375 10.8918 14.4375 11.375C14.4375 11.8582 14.8293 12.25 15.3125 12.25C15.7957 12.25 16.1875 11.8582 16.1875 11.375C16.1875 10.8918 15.7957 10.5 15.3125 10.5Z">
+                                                                    </path>
+                                </svg>
                             </div>
+                        </div>
+
+                        <!-- Shipping Message -->
+                        <div id="progress-msg" class="tf-progress-msg mt-2">
+                            <!-- Will be dynamically filled -->
+                        </div>
+
+
+   
+
+
+
+
+                            </div>
+
 
                             <div class="tf-page-cart-checkout">
                                 <div class="shipping-calculator">
@@ -225,10 +246,17 @@ Your shopping cart
 
                                 <!-- gift wrap price -->
 
-                               <form method="post" action="{% url 'cart:update_gift_wrap' %}">
+
+
+                               <form method="post" action="#">
                                     {% csrf_token %}
                                     <div class="cart-checkbox">
-                                        <input type="checkbox" name="gift_wrap" class="tf-check" id="cart-gift-checkbox" {% if cart.cart.gift_wrap %}checked{% endif %} onchange="this.form.submit()">
+                                        <input type="checkbox"
+                                            name="gift_wrap"
+                                            class="tf-check"
+                                            id="cart-gift-checkbox"
+                                            {% if cart.cart.gift_wrap %}checked{% endif %}
+                                            onchange="this.form.submit()">
                                         <label for="cart-gift-checkbox" class="fw-4">
                                             <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
                                         </label>
@@ -239,7 +267,9 @@ Your shopping cart
 
                                 <div class="tf-cart-totals-discounts">
                                     <h3>Subtotal</h3>
-                                    <span class="total-value">${{ cart.get_total_price|floatformat:2 }} USD</span>
+                                   <span id="cart-total">${{ cart.get_total_price|floatformat:2 }}</span>
+                                   <!--<div id="cart-total-price">${{ cart.get_total_price|floatformat:2 }}</div>-->
+
                                     
                                 </div>
                                 <p class="tf-cart-tax">
@@ -372,7 +402,268 @@ Your shopping cart
             </div>
         </section>
         <!-- page-cart -->
-        
+
+
+<script>
+   function updateShippingProgress() {
+  fetch("{% url 'cart:cart_shipping_info' %}")
+    .then(response => response.json())
+    .then(data => {
+      const progressFill = document.getElementById('progress-fill');
+      const progressCar = document.querySelector('.progress-car');
+      const progressMsg = document.getElementById('progress-msg');
+
+      let progressPercent = Math.min(Math.max(data.progress * 100, 0), 100);
+      progressFill.style.width = progressPercent + '%';
+      progressCar.style.left = progressPercent + '%';
+
+      if (data.qualified) {
+        progressMsg.textContent = "Congratulations! You qualify for free shipping.";
+      } else {
+        progressMsg.textContent = `Add $${data.remaining} more to qualify for free shipping.`;
+      }
+    })
+    .catch(err => {
+      console.error('Failed to fetch shipping progress:', err);
+    });
+}
+
+// ✅ Move this OUTSIDE
+document.addEventListener('DOMContentLoaded', () => {
+  updateShippingProgress();
+});
+
+</script>
+
+
+
+<!-- remove buttton with ajax -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".remove-cart").forEach(btn => {
+        btn.addEventListener("click", function () {
+            const productId = this.dataset.productId;
+            const url = this.dataset.url;
+            const csrfToken = this.dataset.csrf;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: "quantity=1"  // can be empty, your backend ignores it
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Find the closest parent row element to remove
+                    const row = this.closest(".tf-cart-item"); // adjust selector to your cart item container
+                    if (row) row.remove();
+
+                    // Update the cart total display
+                    const totalCartPrice = document.getElementById("cart-total");
+                    if (totalCartPrice) {
+                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    // Optional: show empty cart message if needed
+                    if (data.item_count === 0) {
+                        // Show your empty cart message, e.g.:
+                        // document.getElementById("empty-cart-message").style.display = "block";
+                    }
+                    updateShippingProgress();
+
+                } else {
+                    console.error("Failed to remove item.");
+                }
+            })
+            .catch(error => console.error("AJAX error:", error));
+        });
+    });
+});
+
+</script>
+
+<!-- Ajax updating quantity and price for item total price and cart total price -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    document.querySelectorAll(".btn-quantity").forEach(button => {
+        button.addEventListener("click", function () {
+            const isIncrement = this.classList.contains("btnincrease");
+            const productId = this.dataset.id;
+            const container = this.closest(".wg-quantity");
+            const input = container.querySelector(".quantity-input");
+            let currentQuantity = parseInt(input.value);
+
+            const newQuantity = isIncrement ? currentQuantity + 1 : Math.max(1, currentQuantity - 1);
+
+            fetch(`/cart/add/${productId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `quantity=${newQuantity}&override=True`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = newQuantity;
+
+                    // Get the item row
+                    const itemRow = container.closest(".tf-cart-item");
+
+                    // Update only total per item
+                    const itemTotalElement = itemRow.querySelector(".item-total");
+                    if (itemTotalElement && data.item_total) {
+                        itemTotalElement.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                    }
+
+                    // Update subtotal
+                    const totalCartPrice = document.querySelector("#cart-total");
+                    if (totalCartPrice && data.total_price) {
+                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    updateShippingProgress();
+                }
+            });
+        });
+    });
+});
+</script>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // CSRF setup for AJAX POST
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i=0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Remove item from cart
+    document.querySelectorAll('.remove-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const url = this.dataset.url;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the product row from table
+                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                    if (row) row.remove();
+
+                    // Update total price in your page, e.g.:
+                    const totalPriceElem = document.querySelector('#cart-total-price');
+                    if (totalPriceElem) totalPriceElem.textContent = `$${data.total_price}`;
+
+                    // Optionally update cart item count or show message
+                } else {
+                    alert('Failed to remove item from cart.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Quantity update handlers for increment and decrement
+    function updateQuantity(productId, newQuantity) {
+        fetch("{% url 'cart:cart_update_quantity' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: newQuantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update quantity input field
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                if (row) {
+                    const qtyInput = row.querySelector('.quantity-input');
+                    if (qtyInput) qtyInput.value = data.quantity;
+
+                    // Update item total price cell
+                    const totalCell = row.querySelector('.tf-cart-item_total .cart-total');
+                    if (totalCell) totalCell.textContent = `$${data.item_total}`;
+
+                    // Update total price in cart
+                    const totalPriceElem = document.querySelector('#cart-total-price');
+                    if (totalPriceElem) totalPriceElem.textContent = `$${data.total_price}`;
+                }
+
+                updateShippingProgress();
+
+            } else {
+                alert('Failed to update quantity: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    document.querySelectorAll('.btnincrease').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.id;
+            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+            if (row) {
+                const qtyInput = row.querySelector('.quantity-input');
+                let currentQty = parseInt(qtyInput.value);
+                updateQuantity(productId, currentQty + 1);
+            }
+        });
+    });
+
+    document.querySelectorAll('.btndecrease').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.id;
+            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+            if (row) {
+                const qtyInput = row.querySelector('.quantity-input');
+                let currentQty = parseInt(qtyInput.value);
+                if (currentQty > 1) {
+                    updateQuantity(productId, currentQty - 1);
+                }
+            }
+        });
+    });
+});
+</script>
+
+
+
+
 
     
     

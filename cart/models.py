@@ -1,6 +1,7 @@
 from django.db import models
 
 from store.models import Product
+from django.contrib.postgres.fields import JSONField
 
 class Cart(models.Model):
     cart_id = models.CharField(max_length=250, blank=True)
@@ -14,6 +15,8 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     is_active = models.BooleanField(default=True)
+    
+    customizations = models.JSONField(blank=True, null=True) # Store all customization options
     
     def __str__(self):
         return self.product

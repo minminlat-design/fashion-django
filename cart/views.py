@@ -8,6 +8,8 @@ from .cart import Cart
 from .forms import CartAddProductForm
 from django.views.decorators.http import require_GET
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt  
+
 
 
 
@@ -108,5 +110,23 @@ def cart_update_quantity(request):
         })
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)})
+    
+    
+
+
+
+@require_POST
+def toggle_gift_wrap(request):
+    data = json.loads(request.body)
+    enable = data.get('enable', False)
+
+    cart = Cart(request)
+    cart.toggle_gift_wrap(enable)
+
+    return JsonResponse({
+        'success': True,
+        'gift_wrap': cart.gift_wrap,
+        'total_price': str(cart.get_total_price()),  # send as string to avoid float issues
+    })
 
 

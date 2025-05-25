@@ -248,6 +248,10 @@ Your shopping cart
 
 
 
+
+
+{% comment "" %}
+
                                <form method="post" action="#">
                                     {% csrf_token %}
                                     <div class="cart-checkbox">
@@ -262,6 +266,24 @@ Your shopping cart
                                         </label>
                                     </div>
                                 </form>
+
+{% endcomment %}
+
+
+<div class="cart-checkbox">
+    <input type="checkbox"
+           id="cart-gift-checkbox"
+           class="tf-check"
+           {% if cart.cart.gift_wrap %}checked{% endif %}>
+    <label for="cart-gift-checkbox" class="fw-4">
+        <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
+    </label>
+</div>
+
+<!-- Add this: -->
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+
 
 
 
@@ -659,6 +681,100 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+</script>
+
+
+{% comment "" %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const giftWrapCheckbox = document.getElementById('cart-gift-checkbox');
+
+    if (giftWrapCheckbox) {
+        giftWrapCheckbox.addEventListener('change', function () {
+            const isChecked = giftWrapCheckbox.checked;
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'cart:cart_toggle_gift_wrap' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: `gift_wrap=${isChecked}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const totalElem = document.getElementById('cart-total');
+                    if (totalElem) {
+                        totalElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Gift wrap update failed:', error);
+            });
+        });
+    }
+});
+</script>
+
+
+
+
+
+{% endcomment %}
+
+
+<script>
+document.getElementById('cart-gift-checkbox').addEventListener('change', function() {
+    const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfTokenInput) {
+        console.error("CSRF token input not found");
+        return;
+    }
+    const csrfToken = csrfTokenInput.value;
+    const giftWrap = this.checked;
+
+    fetch('/cart/toggle-gift-wrap/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({ enable: giftWrap })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update checkbox state just in case
+            document.getElementById('cart-gift-checkbox').checked = data.gift_wrap;
+
+            // Update total price dynamically
+            const totalPriceElement = document.getElementById('cart-total');
+            if (totalPriceElement) {
+                totalPriceElement.textContent = `$${data.total_price}`;
+            }
+
+            // Optionally update gift wrap price display or any messages here
+
+        } else {
+            alert('Error updating gift wrap: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Fetch error:', error));
+});
+
+
 </script>
 
 

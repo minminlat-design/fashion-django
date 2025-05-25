@@ -1,6 +1,16 @@
 from decimal import Decimal
 from django.conf import settings
 from store.models import Product
+from .models import CartSettings
+
+
+def get_cart_settings():
+    try:
+        return CartSettings.objects.latest('id')
+    except CartSettings.DoesNotExist:
+        # Return default values if no settings exist
+        return CartSettings(free_shipping_threshold=Decimal('300.00'), gift_wrap_price=Decimal('5.00'))
+
 
 class Cart:
     FREE_SHIPPING_THRESHOLD = Decimal('300.00')
@@ -18,9 +28,14 @@ class Cart:
             
         self.cart = cart
         
-        self.gift_wrap_price = Decimal('5.00')
-        # Read gift_wrap flag separately from session, NOT from cart dict
-        self.gift_wrap = self.session.get('gift_wrap', False)
+        # Load settings dynamically
+        settings_obj = get_cart_settings()
+
+        self.FREE_SHIPPING_THRESHOLD = settings_obj.free_shipping_threshold
+        self.gift_wrap_price = settings_obj.gift_wrap_price
+        self.gift_wrap = self.cart.get('gift_wrap', False)
+        
+        
 
     def add(self, product, quantity=1, override_quantity=False):
         product_id = str(product.id)

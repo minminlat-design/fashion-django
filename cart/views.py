@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from store.models import Product
-from .cart import Cart
+from .cart import Cart, CartSettings
 from .forms import CartAddProductForm
 from django.views.decorators.http import require_GET
 from django.template.loader import render_to_string
@@ -55,25 +55,37 @@ def cart_remove(request, product_id):
     })
 
 
-    
 
 def cart_detail(request):
     cart = Cart(request)
     free_shipping_data = cart.get_free_shipping_data()
-    
+
     # Provide gift_wrap status explicitly
     gift_wrap_status = cart.gift_wrap
-    
+
+    # Try to get settings from model, fallback to defaults if none exist
+    try:
+        settings_obj = CartSettings.objects.latest('id')
+    except CartSettings.DoesNotExist:
+        settings_obj = CartSettings(
+            free_shipping_threshold=Decimal('300.00'), 
+            gift_wrap_price=Decimal('5.00')
+        )
+
     # Updating the quantities
     for item in cart:
         item['update_quantity_form'] = CartAddProductForm(
-        initial={'quantity': item['quantity'], 'override': True}
+            initial={'quantity': item['quantity'], 'override': True}
         )
+    
     return render(request, 'cart/detail.html', {
         'cart': cart,
         'free_shipping_data': free_shipping_data,
         'gift_wrap': gift_wrap_status,
+        'gift_wrap_price': settings_obj.gift_wrap_price,
     })
+    
+    
 
 
 @require_GET

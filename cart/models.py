@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 
 from store.models import Product
 from django.contrib.postgres.fields import JSONField
@@ -22,3 +23,20 @@ class CartItem(models.Model):
         return self.product
     
     
+
+
+# Free shipping threshold and gift wrap price fixing
+class CartSettings(models.Model):
+    free_shipping_threshold = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('300.00')
+    )
+    gift_wrap_price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('5.00')
+    )
+
+    def __str__(self):
+        return f"Cart Settings (Free shipping over ${self.free_shipping_threshold}, Gift wrap ${self.gift_wrap_price})"
+
+    class Meta:
+        verbose_name = "Cart Setting"
+        verbose_name_plural = "Cart Settings"

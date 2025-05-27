@@ -188,7 +188,17 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     monogram_keys = ["monogram_style", "monogram_color", "monogram_placement", "shirt_monogram_placement",
                      "shirt_monogram_color", "shirt_monogram_style"]
     
-    print (f"{monogram_keys}")
+    
+    if request.method == "POST":
+        for key in request.POST:
+            if key.startswith(('jacket-', 'pants-', 'shirt-', 'vest-', 'monogram')):
+                values = request.POST.getlist(key)
+                print(f"Selected for {key}: {values}")
+
+        
+    
+
+        
     
     
     

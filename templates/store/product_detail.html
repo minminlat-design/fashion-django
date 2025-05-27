@@ -150,7 +150,7 @@
 
                                     
                                                
-                  <form action="{% url 'cart:cart_add' product.id %}" method="post">
+                  <form action="{% url 'cart:cart_add' product.id %}" method="post" id="product-form">
                     <div style="display: none;">
                         {{ cart_product_form }}
                     </div>
@@ -249,7 +249,7 @@
 
                                 <!-- monogram checkbox -->
                                 <div class="form-check my-3">
-                                    <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
+                                    <input type="checkbox" class="form-check-input custom-checkbox" value="on" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
                                     <label class="form-check-label" for="enable-jacket-monogram">
                                     Add Monogram (+${{ monogram_price }})
                                     </label>
@@ -264,17 +264,17 @@
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#jacket-style" type="button" role="tab">
+                                        <button class="nav-link" id="jacket-style-tab" data-bs-toggle="tab" data-bs-target="#jacket-style" type="button" role="tab">
                                         Style
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#jacket-color" type="button" role="tab">
+                                        <button class="nav-link" id="jacket-color-tab" data-bs-toggle="tab" data-bs-target="#jacket-color" type="button" role="tab">
                                         Color
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#jacket-placement" type="button" role="tab">
+                                        <button class="nav-link" id="jacket-placement-tab" data-bs-toggle="tab" data-bs-target="#jacket-placement" type="button" role="tab">
                                         Placement
                                         </button>
                                     </li>
@@ -360,7 +360,7 @@
 
                                 <!-- monogram checkbox -->
                                 <div class="form-check my-3">
-                                    <input type="checkbox" class="form-check-input custom-checkbox" value="" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
+                                    <input type="checkbox" class="form-check-input custom-checkbox" value="on" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
                                     <label class="form-check-label" for="enable-shirt-monogram">
                                     Add Monogram (+${{ monogram_price }})
                                     </label>
@@ -375,17 +375,17 @@
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="style-tab" data-bs-toggle="tab" data-bs-target="#shirt-style" type="button" role="tab">
+                                        <button class="nav-link" id="shirt-style-tab" data-bs-toggle="tab" data-bs-target="#shirt-style" type="button" role="tab">
                                         Style
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="color-tab" data-bs-toggle="tab" data-bs-target="#shirt-color" type="button" role="tab">
+                                        <button class="nav-link" id="shirt-color-tab" data-bs-toggle="tab" data-bs-target="#shirt-color" type="button" role="tab">
                                         Color
                                         </button>
                                     </li>
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link" id="placement-tab" data-bs-toggle="tab" data-bs-target="#shirt-placement" type="button" role="tab">
+                                        <button class="nav-link" id="shirt-placement-tab" data-bs-toggle="tab" data-bs-target="#shirt-placement" type="button" role="tab">
                                         Placement
                                         </button>
                                     </li>
@@ -507,7 +507,7 @@
                                                         {% for option in vest_style %}
                                                         <div class="col-6 col-md-4 col-lg-3">
                                                             <div class="border rounded p-2 text-center h-100">
-                                                            <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}">
+                                                            <input class="form-check-input d-block mx-auto mb-2" type="radio" name="vest_style" id="vest-style-{{ option.id }}" value="{{ option.id }}" data-price="{{ option.price }}">
                                                             <label class="form-check-label d-block" for="vest-style-{{ option.id }}">
                                                                 {% if option.image %}
                                                                 <img src="{{ option.image.url }}" alt="{{ option.name }}" class="img-fluid mb-2" style="max-height: 120px; cursor: zoom-in;" onclick="showZoomModal(this)">

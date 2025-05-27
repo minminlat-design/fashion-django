@@ -1,105 +1,116 @@
 from decimal import Decimal
 from django.conf import settings
 from store.models import Product
-from .models import CartSettings
+from .models import CartItem, CartSettings, Cart as CartModel  # Rename to avoid name clash
+import json
+import hashlib
 
 
 def get_cart_settings():
     try:
         return CartSettings.objects.latest('id')
     except CartSettings.DoesNotExist:
-        # Return default values if no settings exist
         return CartSettings(free_shipping_threshold=Decimal('300.00'), gift_wrap_price=Decimal('5.00'))
 
 
 class Cart:
-    FREE_SHIPPING_THRESHOLD = Decimal('300.00')
-    
     def __init__(self, request):
-        """
-        Initialize the cart.
-        """
         self.session = request.session
         cart = self.session.get(settings.CART_SESSION_ID)
-        
         if not cart:
-            # save an empty cart in the session
             cart = self.session[settings.CART_SESSION_ID] = {}
-            
         self.cart = cart
-        
-        # Load settings dynamically
-        settings_obj = get_cart_settings()
 
+        settings_obj = get_cart_settings()
         self.FREE_SHIPPING_THRESHOLD = settings_obj.free_shipping_threshold
         self.gift_wrap_price = settings_obj.gift_wrap_price
-        self.gift_wrap = self.cart.get('gift_wrap', False)
+        self.gift_wrap = self.session.get('gift_wrap', False)
         
-        
+    
 
-    def add(self, product, quantity=1, override_quantity=False):
+    def _split_cart_key(self, cart_key):
+        if ':' in cart_key:
+            return cart_key.split(':', 1)
+        return cart_key, None
+
+    def add(self, product, quantity=1, override_quantity=False, selected_options=None, customizations=None):
         product_id = str(product.id)
+        options_key = self._generate_options_key(selected_options, customizations)
+        cart_key = f"{product_id}:{options_key}"
+
         price = str(product.discounted_price if product.discounted_price else product.price)
 
-        if product_id not in self.cart:
-            self.cart[product_id] = {
+        if cart_key not in self.cart:
+            self.cart[cart_key] = {
                 'quantity': 0,
-                'price': price
+                'price': price,
+                'selected_options': selected_options or {},
+                'customizations': customizations or {},
             }
 
         if override_quantity:
-            self.cart[product_id]['quantity'] = quantity
+            self.cart[cart_key]['quantity'] = quantity
         else:
-            self.cart[product_id]['quantity'] += quantity
+            self.cart[cart_key]['quantity'] += quantity
 
         self.save()
+        
+        print(self.cart.keys())  # Inside Cart class
 
     def save(self):
-        # Save cart and gift_wrap separately in session
         self.session[settings.CART_SESSION_ID] = self.cart
         self.session['gift_wrap'] = self.gift_wrap
         self.session.modified = True
 
-    def remove(self, product):
+    def remove(self, product, selected_options=None, customizations=None):
         product_id = str(product.id)
-        if product_id in self.cart:
-            del self.cart[product_id]
+        options_key = self._generate_options_key(selected_options, customizations)
+        cart_key = f"{product_id}:{options_key}"
+        if cart_key in self.cart:
+            del self.cart[cart_key]
             self.save()
 
     def __iter__(self):
-        # Get only product IDs that are digits (exclude other keys)
-        product_ids = [key for key in self.cart.keys() if key.isdigit()]
+        product_ids = {
+            self._split_cart_key(k)[0]
+            for k in self.cart
+            if self._split_cart_key(k)[0].isdigit()
+        }
 
         products = Product.objects.filter(id__in=product_ids)
-        cart = self.cart.copy()
+        products_map = {str(product.id): product for product in products}
 
-        for product in products:
-            cart[str(product.id)]['product'] = product
+        for cart_key, item in self.cart.items():
+            product_id, _ = self._split_cart_key(cart_key)
+            if not product_id.isdigit():
+                continue
 
-        for item in cart.values():
-            if isinstance(item, dict) and 'price' in item:
+            product = products_map.get(product_id)
+            if product:
+                item = item.copy()
+                item['product'] = product
                 item['price'] = Decimal(item['price'])
                 item['total_price'] = item['price'] * item['quantity']
+                item['selected_options'] = item.get('selected_options', {})
+                
+                item['cart_key'] = cart_key  # <-- Add this line here
+                
                 yield item
 
     def __len__(self):
-        """
-        Count all items in the cart.
-        """
-        return sum(item['quantity'] for key, item in self.cart.items() if key.isdigit())
+        return sum(item['quantity'] for item in self.cart.values() if isinstance(item, dict))
 
     def get_total_price(self):
         total = sum(
             Decimal(item['price']) * item['quantity']
-            for key, item in self.cart.items()
-            if key.isdigit() and isinstance(item, dict) and 'price' in item
+            for item in self.cart.values()
+            if isinstance(item, dict) and 'price' in item
         )
         if self.gift_wrap:
             total += self.gift_wrap_price
         return total
 
     def clear(self):
-        # remove cart and gift_wrap from session
         if settings.CART_SESSION_ID in self.session:
             del self.session[settings.CART_SESSION_ID]
         if 'gift_wrap' in self.session:
@@ -110,33 +121,114 @@ class Cart:
         total = self.get_total_price()
         qualified = total >= self.FREE_SHIPPING_THRESHOLD
         remaining = max(self.FREE_SHIPPING_THRESHOLD - total, Decimal('0.00'))
-
-        if self.FREE_SHIPPING_THRESHOLD > 0:
-            raw_progress = float(total / self.FREE_SHIPPING_THRESHOLD)
-            progress = min(raw_progress, 1.0)  # clamp to 1.0
-        else:
-            progress = 0.0
-
+        progress = float(total / self.FREE_SHIPPING_THRESHOLD) if self.FREE_SHIPPING_THRESHOLD > 0 else 0.0
+        progress = min(progress, 1.0)
         return {
-            'progress': progress,  # e.g. 0.25 for 25%
+            'progress': progress,
             'remaining': remaining,
             'qualified': qualified
         }
 
-    def update(self, product, quantity):
+    def update(self, product, quantity, selected_options=None, customizations=None):
         product_id = str(product.id)
-        if product_id in self.cart:
-            self.cart[product_id]['quantity'] = quantity
+        options_key = self._generate_options_key(selected_options, customizations)
+        cart_key = f"{product_id}:{options_key}"
+        if cart_key in self.cart:
+            self.cart[cart_key]['quantity'] = quantity
             self.save()
 
-    def get_item_total(self, product):
+    def get_item_total(self, product, selected_options=None, customizations=None):
         product_id = str(product.id)
-        if product_id in self.cart:
-            quantity = self.cart[product_id]['quantity']
-            price = Decimal(self.cart[product_id]['price'])
-            return float(price * quantity)
-        return 0.0
+        options_key = self._generate_options_key(selected_options, customizations)
+        cart_key = f"{product_id}:{options_key}"
+        if cart_key in self.cart:
+            quantity = self.cart[cart_key]['quantity']
+            price = Decimal(self.cart[cart_key]['price'])
+            return price * quantity
+        return Decimal('0.00')
 
     def toggle_gift_wrap(self, enable: bool):
         self.gift_wrap = enable
         self.save()
+        
+        
+    
+    def _normalize_dict(self, d):
+        """
+        Recursively sort dict keys and convert all values to string for consistency
+        """
+        if not d:
+            return {}
+        normalized = {}
+        for k in sorted(d.keys()):
+            v = d[k]
+            if isinstance(v, dict):
+                normalized[k] = self._normalize_dict(v)
+            elif isinstance(v, list):
+                # If list of dicts, normalize each dict
+                normalized[k] = [self._normalize_dict(i) if isinstance(i, dict) else str(i) for i in v]
+            else:
+                normalized[k] = str(v)
+        return normalized
+
+    def _generate_options_key(self, selected_options, customizations):
+        normalized_options = self._normalize_dict(selected_options or {})
+        normalized_custom = self._normalize_dict(customizations or {})
+        options_str = json.dumps(normalized_options, sort_keys=True)
+        custom_str = json.dumps(normalized_custom, sort_keys=True)
+        combined = options_str + custom_str
+        return hashlib.md5(combined.encode()).hexdigest()
+    
+    
+    def get_product_by_key(self, cart_key):
+        product_id, _ = self._split_cart_key(cart_key)
+        if product_id.isdigit():
+            try:
+                return Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                return None
+        return None
+    
+    
+    
+
+ 
+
+
+
+def sync_session_to_db_cart(session_cart, user):
+    
+    if session_cart.session.session_key is None:
+       session_cart.session.save()
+    cart, created = CartModel.objects.get_or_create(cart_id=session_cart.session.session_key)
+
+    
+
+    for item in session_cart:
+        product = item['product']
+        selected_options = item.get('selected_options', {})
+        customizations = item.get('customizations', {})
+        quantity = item['quantity']
+        base_price = item['price']
+
+        cart_item, created = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            selected_options=selected_options,
+            defaults={
+                'quantity': quantity,
+                'base_price': base_price,
+                'customizations': customizations,
+                'is_active': True,
+            }
+        )
+        if not created:
+            cart_item.quantity = quantity
+            cart_item.base_price = base_price
+            cart_item.customizations = customizations
+            cart_item.is_active = True
+            cart_item.save()
+
+    return cart
+
+

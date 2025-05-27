@@ -40,10 +40,10 @@ Your shopping cart
                              
                                     
                                     
-                                    {% if cart %}
+                                   {% if cart %}
     {% for item in cart %}
         {% with product=item.product %}
-        <tr class="tf-cart-item file-delete" data-product-id="{{ product.id }}">
+        <tr class="tf-cart-item file-delete" data-product-id="{{ product.id }}" data-cart-key="{{ item.cart_key }}">
             <td class="tf-cart-item_product">
                 <a href="{{ product.get_absolute_url }}" class="img-box">
                     <img src="{% if product.first_image %}{{ product.first_image.image.url }}
@@ -51,42 +51,57 @@ Your shopping cart
                          alt="{{ product.name }}">
                 </a>
                 <div class="cart-info">
-                    <a href="{{ product.get_absolute_url }}" class="cart-title link">
-                        {{ product.name }}
-                    </a>
-                    <div class="cart-meta-variant">White / M</div>
-                    <!-- ajax remove button -->
+    <a href="{{ product.get_absolute_url }}" class="cart-title link">
+        {{ product.name }}
+    </a>
+    
+   <div class="cart-meta-variant">
+  {% if item.selected_options %}
+    {% for category, options in item.selected_options.items %}
+      {% if options.name %}
+        <strong>{{ category|capfirst }}</strong>: {{ options.name }}
+        {% if not forloop.last %} / {% endif %}
+      {% else %}
+        <strong>{{ category|capfirst }}</strong>:
+        {% for sub_option in options.items %}
+          {{ sub_option.0|capfirst }}: {{ sub_option.1.name }}
+          {% if not forloop.last or not forloop.parentloop.last %} / {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    No variants selected
+  {% endif %}
+</div>
 
-                    <span class="remove-cart link remove"
-                        data-product-id="{{ product.id }}"
-                        data-url="{% url 'cart:cart_remove' product.id %}"
-                        data-csrf="{{ csrf_token }}">
-                        Remove
-                    </span>
 
 
 
 
-                </div>
+    <span class="remove-cart link remove"
+          data-product-id="{{ product.id }}"
+          data-url="{% url 'cart:cart_remove' product.id %}"
+          data-csrf="{{ csrf_token }}">
+        Remove
+    </span>
+</div>
+
             </td>
 
             <td class="tf-cart-item_price tf-variant-item-price" cart-data-title="Price">
                 <div class="cart-price price">${{ item.price|floatformat:2 }}</div>
             </td>
 
-
             
 
-           
-            
             <td class="tf-cart-item_quantity" cart-data-title="Quantity">
                 <div class="cart-quantity">
                     <div class="wg-quantity">
-                        <span class="btn-quantity btndecrease" data-id="{{ item.product.id }}">
+                        <span class="btn-quantity btndecrease" data-id="{{ item.product.id }}" data-cart-key="{{ item.cart_key }}">
                             <svg width="9" height="1"><path d="M9 1H0V0H9V1Z"/></svg>
                         </span>
                         <input type="text" class="quantity-input" value="{{ item.quantity }}" readonly>
-                        <span class="btn-quantity btnincrease" data-id="{{ item.product.id }}">
+                        <span class="btn-quantity btnincrease" data-id="{{ item.product.id }}" data-cart-key="{{ item.cart_key }}">
                             <svg width="9" height="9"><path d="M9 5.14H5.14V9H3.86V5.14H0V3.86H3.86V0H5.14V3.86H9V5.14Z"/></svg>
                         </span>
                     </div>
@@ -107,6 +122,7 @@ Your shopping cart
         <td colspan="4" class="text-center">Your cart is empty.</td>
     </tr>
 {% endif %}
+
 
                                    
 
@@ -249,25 +265,6 @@ Your shopping cart
 
 
 
-
-{% comment "" %}
-
-                               <form method="post" action="#">
-                                    {% csrf_token %}
-                                    <div class="cart-checkbox">
-                                        <input type="checkbox"
-                                            name="gift_wrap"
-                                            class="tf-check"
-                                            id="cart-gift-checkbox"
-                                            {% if cart.cart.gift_wrap %}checked{% endif %}
-                                            onchange="this.form.submit()">
-                                        <label for="cart-gift-checkbox" class="fw-4">
-                                            <span>Do you want a gift wrap?</span> Only <span class="fw-5">$5.00</span>
-                                        </label>
-                                    </div>
-                                </form>
-
-{% endcomment %}
 
 
 <div class="cart-checkbox">
@@ -508,63 +505,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
 
-<!-- Ajax updating quantity and price for item total price and cart total price -->
+
+<!-- Ajax updating quantity, item total price, cart total price, and remove item -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    document.querySelectorAll(".btn-quantity").forEach(button => {
-        button.addEventListener("click", function () {
-            const isIncrement = this.classList.contains("btnincrease");
-            const productId = this.dataset.id;
-            const container = this.closest(".wg-quantity");
-            const input = container.querySelector(".quantity-input");
-            let currentQuantity = parseInt(input.value);
-
-            const newQuantity = isIncrement ? currentQuantity + 1 : Math.max(1, currentQuantity - 1);
-
-            fetch(`/cart/add/${productId}/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrfToken,
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: `quantity=${newQuantity}&override=True`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    input.value = newQuantity;
-
-                    // Get the item row
-                    const itemRow = container.closest(".tf-cart-item");
-
-                    // Update only total per item
-                    const itemTotalElement = itemRow.querySelector(".item-total");
-                    if (itemTotalElement && data.item_total) {
-                        itemTotalElement.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
-                    }
-
-                    // Update subtotal
-                    const totalCartPrice = document.querySelector("#cart-total");
-                    if (totalCartPrice && data.total_price) {
-                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
-                    }
-
-                    updateShippingProgress();
-                }
-            });
-        });
-    });
-});
-</script>
-
-
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    // CSRF setup for AJAX POST
+    // Helper: get CSRF token from cookie or hidden input
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -579,48 +524,115 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return cookieValue;
     }
-    const csrftoken = getCookie('csrftoken');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
 
-    // Remove item from cart
+    // --- Quantity update using cart_key ---
+    document.querySelectorAll(".btn-quantity[data-cart-key]").forEach(button => {
+        button.addEventListener("click", function () {
+            const isIncrement = this.classList.contains("btnincrease");
+            const cartKey = this.dataset.cartKey;
+            if (!cartKey) {
+                alert("Missing cart key!");
+                return;
+            }
+
+            const container = this.closest(".wg-quantity");
+            const input = container.querySelector(".quantity-input");
+            let currentQuantity = parseInt(input.value);
+            const newQuantity = isIncrement ? currentQuantity + 1 : Math.max(1, currentQuantity - 1);
+
+            fetch(`/cart/update-quantity/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    cart_key: cartKey,
+                    quantity: newQuantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = newQuantity;
+
+                    const itemRow = container.closest("[data-cart-key]");
+                    if (itemRow) {
+                        const itemTotalElement = itemRow.querySelector(".item-total");
+                        if (itemTotalElement && data.item_total !== undefined) {
+                            itemTotalElement.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                        }
+                    }
+
+                    const totalCartPrice = document.querySelector("#cart-total, #cart-total-price");
+                    if (totalCartPrice && data.total_price !== undefined) {
+                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    if (typeof updateShippingProgress === "function") {
+                        updateShippingProgress();
+                    }
+                } else {
+                    alert(`Failed to update quantity: ${data.error}`);
+                }
+            })
+            .catch(err => console.error("Error updating quantity:", err));
+        });
+    });
+
+    // --- Remove item from cart ---
     document.querySelectorAll('.remove-cart').forEach(button => {
         button.addEventListener('click', function() {
             const productId = this.dataset.productId;
             const url = this.dataset.url;
 
+            if (!productId || !url) {
+                alert("Missing product ID or URL for removal.");
+                return;
+            }
+
             fetch(url, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': csrftoken,
+                    'X-CSRFToken': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest',
                 }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove the product row from table
-                    const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                    // Remove product row from DOM
+                    const row = document.querySelector(`[data-product-id="${productId}"]`);
                     if (row) row.remove();
 
-                    // Update total price in your page, e.g.:
-                    const totalPriceElem = document.querySelector('#cart-total-price');
-                    if (totalPriceElem) totalPriceElem.textContent = `$${data.total_price}`;
+                    // Update cart total price display
+                    const totalPriceElem = document.querySelector('#cart-total, #cart-total-price');
+                    if (totalPriceElem && data.total_price !== undefined) {
+                        totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
 
-                    // Optionally update cart item count or show message
+                    if (typeof updateShippingProgress === "function") {
+                        updateShippingProgress();
+                    }
                 } else {
                     alert('Failed to remove item from cart.');
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => console.error('Error removing item:', error));
         });
     });
 
-    // Quantity update handlers for increment and decrement
-    function updateQuantity(productId, newQuantity) {
-        fetch("{% url 'cart:cart_update_quantity' %}", {
+    // --- Quantity update using product_id ---
+    function updateQuantityByProductId(productId, newQuantity) {
+        if (!productId) return;
+
+        fetch(`/cart/update-quantity/`, {  // Adjust URL if needed
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
+                'X-CSRFToken': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({
@@ -631,108 +643,62 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update quantity input field
-                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                const row = document.querySelector(`[data-product-id="${productId}"]`);
                 if (row) {
                     const qtyInput = row.querySelector('.quantity-input');
                     if (qtyInput) qtyInput.value = data.quantity;
 
-                    // Update item total price cell
-                    const totalCell = row.querySelector('.tf-cart-item_total .cart-total');
-                    if (totalCell) totalCell.textContent = `$${data.item_total}`;
+                    const totalCell = row.querySelector('.item-total');
+                    if (totalCell && data.item_total !== undefined) {
+                        totalCell.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                    }
 
-                    // Update total price in cart
-                    const totalPriceElem = document.querySelector('#cart-total-price');
-                    if (totalPriceElem) totalPriceElem.textContent = `$${data.total_price}`;
+                    const totalPriceElem = document.querySelector('#cart-total, #cart-total-price');
+                    if (totalPriceElem && data.total_price !== undefined) {
+                        totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
                 }
 
-                updateShippingProgress();
-
+                if (typeof updateShippingProgress === "function") {
+                    updateShippingProgress();
+                }
             } else {
                 alert('Failed to update quantity: ' + data.error);
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => console.error('Error updating quantity:', error));
     }
 
-    document.querySelectorAll('.btnincrease').forEach(button => {
+    // Bind increment buttons by product ID, but only those WITHOUT data-cart-key
+    document.querySelectorAll('.btnincrease:not([data-cart-key])').forEach(button => {
         button.addEventListener('click', function() {
             const productId = this.dataset.id;
-            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-            if (row) {
-                const qtyInput = row.querySelector('.quantity-input');
-                let currentQty = parseInt(qtyInput.value);
-                updateQuantity(productId, currentQty + 1);
-            }
+            const row = document.querySelector(`[data-product-id="${productId}"]`);
+            if (!row) return;
+            const qtyInput = row.querySelector('.quantity-input');
+            if (!qtyInput) return;
+            let currentQty = parseInt(qtyInput.value);
+            updateQuantityByProductId(productId, currentQty + 1);
         });
     });
 
-    document.querySelectorAll('.btndecrease').forEach(button => {
+    // Bind decrement buttons by product ID, but only those WITHOUT data-cart-key
+    document.querySelectorAll('.btndecrease:not([data-cart-key])').forEach(button => {
         button.addEventListener('click', function() {
             const productId = this.dataset.id;
-            const row = document.querySelector(`tr[data-product-id="${productId}"]`);
-            if (row) {
-                const qtyInput = row.querySelector('.quantity-input');
-                let currentQty = parseInt(qtyInput.value);
-                if (currentQty > 1) {
-                    updateQuantity(productId, currentQty - 1);
-                }
+            const row = document.querySelector(`[data-product-id="${productId}"]`);
+            if (!row) return;
+            const qtyInput = row.querySelector('.quantity-input');
+            if (!qtyInput) return;
+            let currentQty = parseInt(qtyInput.value);
+            if (currentQty > 1) {
+                updateQuantityByProductId(productId, currentQty - 1);
             }
         });
     });
 });
 </script>
 
-
-{% comment "" %}
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const giftWrapCheckbox = document.getElementById('cart-gift-checkbox');
-
-    if (giftWrapCheckbox) {
-        giftWrapCheckbox.addEventListener('change', function () {
-            const isChecked = giftWrapCheckbox.checked;
-
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            fetch("{% url 'cart:cart_toggle_gift_wrap' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: `gift_wrap=${isChecked}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const totalElem = document.getElementById('cart-total');
-                    if (totalElem) {
-                        totalElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Gift wrap update failed:', error);
-            });
-        });
-    }
-});
-</script>
-
-
-
-
-
-{% endcomment %}
 
 
 <script>

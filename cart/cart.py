@@ -61,6 +61,8 @@ class Cart:
         self.session[settings.CART_SESSION_ID] = self.cart
         self.session['gift_wrap'] = self.gift_wrap
         self.session.modified = True
+        
+    """
 
     def remove(self, product, selected_options=None, customizations=None):
         product_id = str(product.id)
@@ -69,6 +71,18 @@ class Cart:
         if cart_key in self.cart:
             del self.cart[cart_key]
             self.save()
+            
+    """
+    
+    def remove(self, product):
+        product_id = str(product.id)
+        keys_to_remove = [k for k in self.cart if k.startswith(product_id + ':')]
+        for k in keys_to_remove:
+            del self.cart[k]
+        self.save()
+
+    
+    
 
     def __iter__(self):
         product_ids = {

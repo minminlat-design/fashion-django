@@ -110,36 +110,31 @@ document.addEventListener("DOMContentLoaded", function () {
   const vestCheckbox = document.getElementById("enable-vest-customization");
   const vestFields = document.getElementById("vest-customization-fields");
 
-  // Shirt checkbox and fields
   const shirtCheckbox = document.getElementById("enable-shirt-customization");
   const shirtFields = document.getElementById("shirt-customization-fields");
-
-  const totalPriceEl = document.getElementById("total-price");
-
-  // Use discounted_price if available, otherwise use product.price
-  const basePrice = parseFloat("{% if product.discounted_price %}{{ product.discounted_price|floatformat:2 }}{% else %}{{ product.price|floatformat:2 }}{% endif %}");
-
-  const MONOGRAM_PRICE = parseFloat("{{ monogram_price }}");
-  
-  const VEST_PRICE = parseFloat("{{ vest_price }}");
-  const SHIRT_PRICE = parseFloat("{{ shirt_price }}");
 
   const shirtMonogramCheckbox = document.getElementById("enable-shirt-monogram");
   const shirtMonogramFields = document.getElementById("shirt-monogram-fields");
 
+  const totalPriceEl = document.getElementById("total-price");
+
+  const basePrice = parseFloat("{% if product.discounted_price %}{{ product.discounted_price|floatformat:2 }}{% else %}{{ product.price|floatformat:2 }}{% endif %}");
+
+  const MONOGRAM_PRICE = parseFloat("{{ monogram_price }}");
+  const VEST_PRICE = parseFloat("{{ vest_price }}");
+  const SHIRT_PRICE = parseFloat("{{ shirt_price }}");
 
   let currentTarget = "";
 
-
+  // Show/hide shirt monogram
   if (shirtMonogramCheckbox && shirtMonogramFields) {
-  shirtMonogramCheckbox.addEventListener("change", () => {
-    shirtMonogramFields.style.display = shirtMonogramCheckbox.checked ? "block" : "none";
-    calculateTotal();
-  });
-}
+    shirtMonogramCheckbox.addEventListener("change", () => {
+      shirtMonogramFields.style.display = shirtMonogramCheckbox.checked ? "block" : "none";
+      calculateTotal();
+    });
+  }
 
-
-  // Monogram checkbox toggle
+  // Show/hide jacket monogram
   if (monogramCheckbox && monogramFields) {
     monogramCheckbox.addEventListener("change", () => {
       monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
@@ -147,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Vest checkbox toggle
+  // Show/hide vest section
   if (vestCheckbox && vestFields) {
     vestCheckbox.addEventListener("change", () => {
       vestFields.style.display = vestCheckbox.checked ? "block" : "none";
@@ -155,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Shirt checkbox toggle
+  // Show/hide shirt section
   if (shirtCheckbox && shirtFields) {
     shirtCheckbox.addEventListener("change", () => {
       shirtFields.style.display = shirtCheckbox.checked ? "block" : "none";
@@ -171,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function () {
     calculateTotal();
   });
 
-  // Show correct customization group based on selected set item
+  // Switch customization group by set item
   function updateCustomizationGroups() {
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     currentTarget = selectedSet.dataset.target;
@@ -184,82 +179,100 @@ document.addEventListener("DOMContentLoaded", function () {
       monogramFields.style.display = monogramCheckbox.checked ? "block" : "none";
     } else {
       monogramFields.style.display = "none";
-      if(monogramCheckbox) monogramCheckbox.checked = false;
+      if (monogramCheckbox) monogramCheckbox.checked = false;
     }
   }
 
-  // Calculate total price
   function calculateTotal() {
     let total = basePrice;
 
+    // Get hidden inputs
+    const monogramPriceInput = document.getElementById("monogram-price-hidden");
+    const shirtMonogramPriceInput = document.getElementById("shirt-monogram-price-hidden");
+    const vestPriceInput = document.getElementById("vest-price-hidden");
+    const shirtPriceInput = document.getElementById("shirt-price-hidden");
 
-    // Shirt monogram prices
-    if (currentTarget === "shirt" && shirtMonogramCheckbox && shirtMonogramCheckbox.checked) {
-      total += MONOGRAM_PRICE;
+    // Reset all to 0
+    if (monogramPriceInput) monogramPriceInput.value = 0;
+    if (shirtMonogramPriceInput) shirtMonogramPriceInput.value = 0;
+    if (vestPriceInput) vestPriceInput.value = 0;
+    if (shirtPriceInput) shirtPriceInput.value = 0;
 
-      const monogramRadios = shirtMonogramFields.querySelectorAll('input[type="radio"]:checked');
-      monogramRadios.forEach((radio) => {
-        total += parseFloat(radio.dataset.price || 0);
-      });
-    }
-
-
-    // Add set item price
+    // Add set item base price
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     total += parseFloat(selectedSet.dataset.price || 0);
 
-    // Add customization prices only if customization panel is visible
+    // Customization options for active set item
     if (customizationFields.style.display !== "none") {
       const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
       if (activeGroup) {
         const checkedRadios = activeGroup.querySelectorAll('input[type="radio"]:checked');
         checkedRadios.forEach((radio) => {
-          total += parseFloat(radio.dataset.price || 0);
+          const extra = parseFloat(radio.dataset.price || 0);
+          total += extra;
         });
       }
 
-      // Monogram prices (jacket only)
+      // Jacket monogram
       if (currentTarget === "jacket" && monogramCheckbox && monogramCheckbox.checked) {
         total += MONOGRAM_PRICE;
+        if (monogramPriceInput) monogramPriceInput.value = MONOGRAM_PRICE;
+
         const monogramRadios = monogramFields.querySelectorAll('input[type="radio"]:checked');
         monogramRadios.forEach((radio) => {
-          total += parseFloat(radio.dataset.price || 0);
+          const extra = parseFloat(radio.dataset.price || 0);
+          total += extra;
+          if (monogramPriceInput) {
+            monogramPriceInput.value = (parseFloat(monogramPriceInput.value) + extra).toFixed(2);
+          }
+        });
+      }
+
+      // Shirt monogram
+      if (currentTarget === "shirt" && shirtMonogramCheckbox && shirtMonogramCheckbox.checked) {
+        total += MONOGRAM_PRICE;
+        if (shirtMonogramPriceInput) shirtMonogramPriceInput.value = MONOGRAM_PRICE;
+
+        const shirtMonogramRadios = shirtMonogramFields.querySelectorAll('input[type="radio"]:checked');
+        shirtMonogramRadios.forEach((radio) => {
+          const extra = parseFloat(radio.dataset.price || 0);
+          total += extra;
+          if (shirtMonogramPriceInput) {
+            shirtMonogramPriceInput.value = (parseFloat(shirtMonogramPriceInput.value) + extra).toFixed(2);
+          }
         });
       }
     }
 
-    // Add vest price if checked (always)
+    // Vest
     if (vestCheckbox && vestCheckbox.checked) {
       total += VEST_PRICE;
+      if (vestPriceInput) vestPriceInput.value = VEST_PRICE;
     }
 
-    // Add shirt price if checked (always)
+    // Shirt
     if (shirtCheckbox && shirtCheckbox.checked) {
       total += SHIRT_PRICE;
+      if (shirtPriceInput) shirtPriceInput.value = SHIRT_PRICE;
     }
 
     totalPriceEl.textContent = total.toFixed(2);
   }
 
-  // Set item dropdown change
+  // Events
   setItemsSelect.addEventListener("change", function () {
     updateCustomizationGroups();
     calculateTotal();
   });
 
-  // Customization radio buttons change
   document.querySelectorAll('#customization-fields input[type="radio"]').forEach((radio) => {
     radio.addEventListener("change", calculateTotal);
   });
 
-  // Initialize on page load
+  // Init
   updateCustomizationGroups();
   calculateTotal();
 });
-
-
-
-
 </script>
 
 

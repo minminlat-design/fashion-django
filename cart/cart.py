@@ -25,25 +25,46 @@ class Cart:
         self.FREE_SHIPPING_THRESHOLD = settings_obj.free_shipping_threshold
         self.gift_wrap_price = settings_obj.gift_wrap_price
         self.gift_wrap = self.session.get('gift_wrap', False)
-        
-    
 
     def _split_cart_key(self, cart_key):
         if ':' in cart_key:
             return cart_key.split(':', 1)
         return cart_key, None
 
+    def _calculate_extra_price(self, selected_options):
+        extra_price = Decimal('0.00')
+
+        if not selected_options:
+            return extra_price
+
+        # Loop through top-level categories like 'vest', 'jacket', etc.
+        for category, options in selected_options.items():
+            if not isinstance(options, dict):
+                continue
+            for key, option in options.items():
+                # Skip if there's no price difference or price is missing
+                price_diff = option.get('price_difference')
+                if price_diff:
+                    try:
+                        extra_price += Decimal(price_diff)
+                    except:
+                        continue
+
+        return extra_price
+
     def add(self, product, quantity=1, override_quantity=False, selected_options=None, customizations=None):
         product_id = str(product.id)
         options_key = self._generate_options_key(selected_options, customizations)
         cart_key = f"{product_id}:{options_key}"
 
-        price = str(product.discounted_price if product.discounted_price else product.price)
+        base_price = product.discounted_price or product.price
+        extra_price = self._calculate_extra_price(selected_options)
+        final_price = base_price + extra_price
 
         if cart_key not in self.cart:
             self.cart[cart_key] = {
                 'quantity': 0,
-                'price': price,
+                'price': str(final_price),
                 'selected_options': selected_options or {},
                 'customizations': customizations or {},
             }
@@ -54,35 +75,18 @@ class Cart:
             self.cart[cart_key]['quantity'] += quantity
 
         self.save()
-        
-        print(self.cart.keys())  # Inside Cart class
 
     def save(self):
         self.session[settings.CART_SESSION_ID] = self.cart
         self.session['gift_wrap'] = self.gift_wrap
         self.session.modified = True
-        
-    """
 
-    def remove(self, product, selected_options=None, customizations=None):
-        product_id = str(product.id)
-        options_key = self._generate_options_key(selected_options, customizations)
-        cart_key = f"{product_id}:{options_key}"
-        if cart_key in self.cart:
-            del self.cart[cart_key]
-            self.save()
-            
-    """
-    
     def remove(self, product):
         product_id = str(product.id)
         keys_to_remove = [k for k in self.cart if k.startswith(product_id + ':')]
         for k in keys_to_remove:
             del self.cart[k]
         self.save()
-
-    
-    
 
     def __iter__(self):
         product_ids = {
@@ -103,23 +107,29 @@ class Cart:
             if product:
                 item = item.copy()
                 item['product'] = product
-                item['price'] = Decimal(item['price'])
+                base_price = Decimal(item['price'])
+
+                selected_options = item.get('selected_options', {})
+                extra_price = self._calculate_extra_price(selected_options)
+
+                # 'price' stored in cart is already final price (base + extra)
+                base_price_with_extra = Decimal(item['price'])
+                item['price'] = base_price_with_extra
                 item['total_price'] = item['price'] * item['quantity']
-                item['selected_options'] = item.get('selected_options', {})
-                
-                item['cart_key'] = cart_key  # <-- Add this line here
-                
+
+                item['selected_options'] = selected_options
+                item['customizations'] = item.get('customizations', {})
+                item['cart_key'] = cart_key
+
                 yield item
 
     def __len__(self):
         return sum(item['quantity'] for item in self.cart.values() if isinstance(item, dict))
 
     def get_total_price(self):
-        total = sum(
-            Decimal(item['price']) * item['quantity']
-            for item in self.cart.values()
-            if isinstance(item, dict) and 'price' in item
-        )
+        total = Decimal('0.00')
+        for item in self.__iter__():
+            total += item['total_price']
         if self.gift_wrap:
             total += self.gift_wrap_price
         return total
@@ -164,9 +174,7 @@ class Cart:
     def toggle_gift_wrap(self, enable: bool):
         self.gift_wrap = enable
         self.save()
-        
-        
-    
+
     def _normalize_dict(self, d):
         """
         Recursively sort dict keys and convert all values to string for consistency
@@ -192,8 +200,7 @@ class Cart:
         custom_str = json.dumps(normalized_custom, sort_keys=True)
         combined = options_str + custom_str
         return hashlib.md5(combined.encode()).hexdigest()
-    
-    
+
     def get_product_by_key(self, cart_key):
         product_id, _ = self._split_cart_key(cart_key)
         if product_id.isdigit():
@@ -202,21 +209,12 @@ class Cart:
             except Product.DoesNotExist:
                 return None
         return None
-    
-    
-    
-
- 
-
 
 
 def sync_session_to_db_cart(session_cart, user):
-    
     if session_cart.session.session_key is None:
-       session_cart.session.save()
+        session_cart.session.save()
     cart, created = CartModel.objects.get_or_create(cart_id=session_cart.session.session_key)
-
-    
 
     for item in session_cart:
         product = item['product']
@@ -244,5 +242,3 @@ def sync_session_to_db_cart(session_cart, user):
             cart_item.save()
 
     return cart
-
-

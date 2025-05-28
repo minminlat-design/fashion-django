@@ -155,6 +155,13 @@
                         {{ cart_product_form }}
                     </div>
                         {% csrf_token %}
+
+
+                        <input type="hidden" name="monogram_price" id="monogram-price-hidden" value="0">
+                        <input type="hidden" name="shirt_monogram_price" id="shirt-monogram-price-hidden" value="0">
+                        <input type="hidden" name="vest_price" id="vest-price-hidden" value="0">
+                        <input type="hidden" name="shirt_price" id="shirt-price-hidden" value="0">
+
                                                                         
   
 
@@ -232,6 +239,7 @@
                                                 {% endif %}
                                             </div>
 
+
                                             
                                         </label>
                                         </div>
@@ -242,13 +250,17 @@
                             {% endif %}
                             {% endfor %}
 
-    
+                           
 
                             {% if target_item|lower == "jacket" %}
                             <!-- MONOGRAM OPTIONS (Only for Jacket) -->
 
+                            
+
                                 <!-- monogram checkbox -->
                                 <div class="form-check my-3">
+                                    <!-- Hidden input to store monogram price -->
+                                    
                                     <input type="checkbox" class="form-check-input custom-checkbox" value="on" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
                                     <label class="form-check-label" for="enable-jacket-monogram">
                                     Add Monogram (+${{ monogram_price }})
@@ -257,7 +269,7 @@
                             
 
                                 <div id="jacket-monogram-fields" style="display: none;">
-                                    <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
+                                    <ul class="nav nav-tabs my-3" id="jacket-monogramTabs" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="jacket-initials-tab" data-bs-toggle="tab" data-bs-target="#jacket-initials" type="button" role="tab">
                                         Initials
@@ -368,7 +380,7 @@
     
 
                                 <div id="shirt-monogram-fields" style="display: none;">
-                                    <ul class="nav nav-tabs my-3" id="monogramTab" role="tablist">
+                                    <ul class="nav nav-tabs my-3" id="shirt-monogramTab" role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" id="shirt_initials_tab" data-bs-toggle="tab" data-bs-target="#shirt-initials" type="button" role="tab">
                                         Initials

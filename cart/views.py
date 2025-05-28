@@ -10,9 +10,12 @@ from .cart import Cart, CartSettings
 from .forms import CartAddProductForm
 
 
+from decimal import Decimal
+
 @require_POST
 def cart_add(request, product_id):
     print("Request POST data:", request.POST)
+
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id)
     form = CartAddProductForm(request.POST)
@@ -21,9 +24,8 @@ def cart_add(request, product_id):
         cd = form.cleaned_data
         print("Cleaned data:", cd)
 
-        # === Improved selected_options logic ===
+        # === Build selected_options from POST data ===
         selected_options = {}
-
         for key, values in request.POST.lists():
             if '_' in key:
                 category, option_name = key.split('_', 1)
@@ -40,20 +42,74 @@ def cart_add(request, product_id):
                     except (VariationOption.DoesNotExist, ValueError):
                         continue
 
-
         print("Final selected_options dict:", selected_options)
 
+        # === Inject base prices into selected_options ===
+        monogram_price = request.POST.get('monogram_price')
+        shirt_monogram_price = request.POST.get('shirt_monogram_price')
+        vest_price = request.POST.get('vest_price')
+        shirt_price = request.POST.get('shirt_price')
+
+        if 'monogram' in selected_options:
+            selected_options['monogram']['price'] = {
+                'id': None,
+                'name': 'Monogram Base Price',
+                'price_difference': monogram_price or '0.00',
+            }
+
+        if 'shirt' in selected_options:
+            selected_options['shirt']['price'] = {
+                'id': None,
+                'name': 'Shirt Base Price',
+                'price_difference': shirt_price or '0.00',
+            }
+
+        if 'vest' in selected_options:
+            selected_options['vest']['price'] = {
+                'id': None,
+                'name': 'Vest Base Price',
+                'price_difference': vest_price or '0.00',
+            }
+
+        if 'shirt' in selected_options and shirt_monogram_price:
+            selected_options['shirt']['monogram_price'] = {
+                'id': None,
+                'name': 'Shirt Monogram Price',
+                'price_difference': shirt_monogram_price or '0.00',
+            }
+
+        # === Collect customizations (initials and free text) ===
+        customizations = {}
+
+        jacket_monogram_text = request.POST.get("jacket_monogram_text", "").strip()
+        if jacket_monogram_text:
+            customizations["jacket_monogram_text"] = jacket_monogram_text
+
+        shirt_monogram_text = request.POST.get("shirt_monogram_text", "").strip()
+        if shirt_monogram_text:
+            customizations["shirt_monogram_text"] = shirt_monogram_text
+
+        print("Final customizations dict:", customizations)
+
+        # === Add to cart ===
         cart.add(
             product=product,
             quantity=cd['quantity'],
             override_quantity=cd['override'],
             selected_options=selected_options,
-            customizations={},  # Add monogram text etc. if needed
+            customizations=customizations,
         )
 
+        # === Handle AJAX response (optional) ===
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            unit_price = Decimal(product.discounted_price or product.price)
+            extra_price = Decimal('0.00')
+            for category, options in selected_options.items():
+                for key, option in options.items():
+                    extra_price += Decimal(option.get('price_difference', '0'))
+
+            unit_price = Decimal(product.discounted_price or product.price) + extra_price
             item_total = unit_price * cd['quantity']
+
             return JsonResponse({
                 'success': True,
                 'quantity': cd['quantity'],
@@ -62,6 +118,7 @@ def cart_add(request, product_id):
             })
 
     return redirect('cart:cart_detail')
+
 
 
 @require_POST

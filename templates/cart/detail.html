@@ -55,7 +55,7 @@ Your shopping cart
         {{ product.name }}
     </a>
     
-   <div class="cart-meta-variant">
+  <div class="cart-meta-variant">
   {% if item.selected_options %}
     {% for category, options in item.selected_options.items %}
       {% if options.name %}
@@ -74,6 +74,18 @@ Your shopping cart
   {% endif %}
 </div>
 
+<div class="cart-meta-customizations">
+  {% if item.customizations %}
+    {% if item.customizations.jacket_monogram_text %}
+      <strong>Jacket Monogram:</strong> {{ item.customizations.jacket_monogram_text }}<br>
+    {% endif %}
+    {% if item.customizations.shirt_monogram_text %}
+      <strong>Shirt Monogram:</strong> {{ item.customizations.shirt_monogram_text }}<br>
+    {% endif %}
+  {% else %}
+    No customizations
+  {% endif %}
+</div>
 
 
 

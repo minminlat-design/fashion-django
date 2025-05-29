@@ -37,20 +37,36 @@ class Cart:
         if not selected_options:
             return extra_price
 
-        # Loop through top-level categories like 'vest', 'jacket', etc.
+        seen_prices = set()
+
         for category, options in selected_options.items():
             if not isinstance(options, dict):
                 continue
             for key, option in options.items():
-                # Skip if there's no price difference or price is missing
                 price_diff = option.get('price_difference')
                 if price_diff:
+                    # Normalize key: remove repeated substrings or use category only
+                    normalized_key = key
+                    # Example heuristic: if key contains repeated words, keep only one instance
+                    parts = key.split('_')
+                    if len(parts) > 2 and parts[0] == parts[1] == parts[2]:
+                        normalized_key = '_'.join(parts[0:2])  # or just parts[0]
+
+                    # Use category + normalized key to detect duplicates
+                    unique_id = f"{category}_{normalized_key}"
+
+                    if unique_id in seen_prices:
+                        continue
+
                     try:
                         extra_price += Decimal(price_diff)
-                    except:
+                        seen_prices.add(unique_id)
+                    except Exception:
                         continue
 
         return extra_price
+
+
 
     def add(self, product, quantity=1, override_quantity=False, selected_options=None, customizations=None):
         product_id = str(product.id)
@@ -112,7 +128,6 @@ class Cart:
                 selected_options = item.get('selected_options', {})
                 extra_price = self._calculate_extra_price(selected_options)
 
-                # 'price' stored in cart is already final price (base + extra)
                 base_price_with_extra = Decimal(item['price'])
                 item['price'] = base_price_with_extra
                 item['total_price'] = item['price'] * item['quantity']
@@ -176,9 +191,6 @@ class Cart:
         self.save()
 
     def _normalize_dict(self, d):
-        """
-        Recursively sort dict keys and convert all values to string for consistency
-        """
         if not d:
             return {}
         normalized = {}
@@ -187,7 +199,6 @@ class Cart:
             if isinstance(v, dict):
                 normalized[k] = self._normalize_dict(v)
             elif isinstance(v, list):
-                # If list of dicts, normalize each dict
                 normalized[k] = [self._normalize_dict(i) if isinstance(i, dict) else str(i) for i in v]
             else:
                 normalized[k] = str(v)

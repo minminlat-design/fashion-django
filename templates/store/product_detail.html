@@ -214,6 +214,24 @@
                                     {{ key|title }}
                                 </button>
 
+                                {% for option in options %}
+    <div>
+        <!-- Debug info -->
+        <small>Option ID: {{ option.id }} | Price diff: {{ option.price_difference }}</small>
+
+        <label>
+            <input type="radio" name="{{ target_item }}_{{ key }}" value="{{ option.id }}" data-price="{{ option.price_difference }}"
+                {% if option.included_by_default %}checked{% endif %}
+            >
+            {{ option.name }}
+            {% if option.price_difference %}
+                (+{{ option.price_difference }} {{ currency_symbol|default:"$" }})
+            {% endif %}
+        </label>
+    </div>
+{% endfor %}
+
+
                                 <div class="collapse mt-2 {% if forloop.first %}show{% endif %}" id="variation-{{ target_item }}-{{ key|slugify }}">
                                     <div class="row g-3 mt-2">
                                     {% for option in options %}
@@ -233,11 +251,18 @@
                                             {% endif %}
 
                                             <div class="small">
-                                                {{ option.name }}
-                                                {% if option.price_difference %}
-                                                    <span class="text-muted">(+{{ option.price_difference }} {{ currency_symbol|default:"$" }})</span>
-                                                {% endif %}
+
+                                                
+
+                                            {{ option.name }}
+                                            {% if option.price_difference %}
+                                                <span class="text-muted">(+{{ option.price_difference }} {{ currency_symbol|default:"$" }})</span>
+                                                <input type="hidden" 
+                                                    name="{{ target_item }}_{{ key|slugify }}_{{ option.name|slugify }}_price" 
+                                                    value="{{ option.price_difference }}" >
+                                            {% endif %}
                                             </div>
+
 
 
                                             
@@ -261,7 +286,8 @@
                                 <div class="form-check my-3">
                                     <!-- Hidden input to store monogram price -->
                                     
-                                    <input type="checkbox" class="form-check-input custom-checkbox" value="on" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
+                                    <input type="checkbox" name="jacket_monogram_selected" class="form-check-input custom-checkbox" value="on" id="enable-jacket-monogram" data-price="{{ monogram_price }}">
+
                                     <label class="form-check-label" for="enable-jacket-monogram">
                                     Add Monogram (+${{ monogram_price }})
                                     </label>
@@ -372,7 +398,7 @@
 
                                 <!-- monogram checkbox -->
                                 <div class="form-check my-3">
-                                    <input type="checkbox" class="form-check-input custom-checkbox" value="on" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
+                                    <input type="checkbox" name="shirt_monogram_selected" class="form-check-input custom-checkbox" value="on" id="enable-shirt-monogram" data-price="{{ monogram_price }}">
                                     <label class="form-check-label" for="enable-shirt-monogram">
                                     Add Monogram (+${{ monogram_price }})
                                     </label>
@@ -498,7 +524,7 @@
 
                                         <!-- VEST TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
                                         <div class="form-check my-4">
-                                        <input type="checkbox" class="form-check-input custom-checkbox" id="enable-vest-customization" data-price="{{ vest_price }}">
+                                        <input type="checkbox" name="vest_selected" value="on" class="form-check-input custom-checkbox" id="enable-vest-customization" data-price="{{ vest_price }}">
                                         <label class="form-check-label" for="enable-vest-customization">
                                             Add a Vest (+${{ vest_price }})
                                         </label>
@@ -543,7 +569,7 @@
 
                                         <!-- Shirt TOGGLE OUTSIDE CUSTOMIZATION SECTION -->
                                         <div class="form-check my-4">
-                                        <input type="checkbox" class="form-check-input custom-checkbox" id="enable-shirt-customization" data-price="{{ shirt_price }}">
+                                        <input type="checkbox" name="shirt_selected" value="on" class="form-check-input custom-checkbox" id="enable-shirt-customization" data-price="{{ shirt_price }}">
                                         <label class="form-check-label" for="enable-shirt-customization">
                                             Add a Shirt (+${{ shirt_price }})
                                         </label>

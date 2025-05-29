@@ -139,11 +139,17 @@ def product_detail(request, main_slug, category_slug, subcategory_slug, product_
     customization_by_target = defaultdict(lambda: defaultdict(list))
     
     set_items_unsorted = []
+    
+    for variation in variations:
+      print(f"Option ID: {variation.option.id}, Name: {variation.option.name}, Variation price_difference: {variation.price_difference}")
+
 
     for variation in variations:
         option = variation.option
         vtype = option.type
         option.price_difference = variation.price_difference
+        
+        
         
         # Store target names to help frontend rendering (e.g., 'jacket', 'vest')
         option.target_names = [target.name.lower() for target in vtype.target_items.all()]

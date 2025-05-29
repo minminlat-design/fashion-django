@@ -97,6 +97,7 @@
     <script type="module" src="{% static 'js/zoom.js' %}"></script>
 
 
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const setItemsSelect = document.getElementById("set-items");
@@ -265,7 +266,8 @@ document.addEventListener("DOMContentLoaded", function () {
     calculateTotal();
   });
 
-  document.querySelectorAll('#customization-fields input[type="radio"]').forEach((radio) => {
+  // Updated this line to use your variation-radio class:
+  document.querySelectorAll('.variation-radio').forEach((radio) => {
     radio.addEventListener("change", calculateTotal);
   });
 
@@ -274,6 +276,8 @@ document.addEventListener("DOMContentLoaded", function () {
   calculateTotal();
 });
 </script>
+
+
 
 
 

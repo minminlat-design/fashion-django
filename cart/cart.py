@@ -44,8 +44,8 @@ class Cart:
                 continue
 
             # Skip unselected optional items
-            if category in ['vest', 'monogram', 'shirt_monogram', 'shirt'] and not options.get('price'):
-                continue
+            #if category in ['vest', 'monogram', 'shirt_monogram', 'shirt'] and not options.get('price'):
+            #    continue
 
             for key, option in options.items():
                 if not isinstance(option, dict):

@@ -13,11 +13,6 @@ from .forms import CartAddProductForm
 
 
 
-import re
-from decimal import Decimal
-from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse
 
 @require_POST
 def cart_add(request, product_id):

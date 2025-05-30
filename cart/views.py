@@ -1,4 +1,5 @@
 from decimal import Decimal
+import re
 import json
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,11 +12,18 @@ from .forms import CartAddProductForm
 
 
 
+
+import re
+from decimal import Decimal
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+
 @require_POST
 def cart_add(request, product_id):
     print("Request POST data:", request.POST)
 
-    # --- Track all selected checkboxes
+    # Track checkbox selections (True if checked)
     checkbox_flags = {
         'monogram_selected': request.POST.get('jacket_monogram_selected') == 'on',
         'shirt_selected': request.POST.get('shirt_selected') == 'on',
@@ -35,33 +43,31 @@ def cart_add(request, product_id):
 
         selected_options = {}
 
-        # --- Inject base prices if checkboxes are selected
+        # Inject base prices only if checkbox selected
         base_price_fields = {
             'monogram': 'monogram_price',
             'shirt': 'shirt_price',
             'vest': 'vest_price',
         }
-
         for category, price_field in base_price_fields.items():
             if checkbox_flags.get(f'{category}_selected'):
-                selected_options[category] = selected_options.get(category, {})
+                selected_options.setdefault(category, {})
                 selected_options[category]['price'] = {
                     'id': None,
                     'name': f"{category.title()} Base Price",
                     'price_difference': request.POST.get(price_field, '0.00')
                 }
 
-        # --- Handle shirt monogram price
+        # Shirt monogram price if selected
         if checkbox_flags['shirt_monogram_selected']:
-            selected_options['shirt'] = selected_options.get('shirt', {})
+            selected_options.setdefault('shirt', {})
             selected_options['shirt']['monogram_price'] = {
                 'id': None,
                 'name': 'Shirt Monogram Price',
                 'price_difference': request.POST.get('shirt_monogram_price', '0.00')
             }
 
-        # --- Map categories to their checkbox flags for filtering
-       # Categories which require explicit checkbox to be selected
+        # Categories requiring checkboxes to be selected
         categories_with_checkboxes = {
             'monogram': 'monogram_selected',
             'shirt': 'shirt_selected',
@@ -69,10 +75,10 @@ def cart_add(request, product_id):
             'shirt_monogram': 'shirt_monogram_selected',
         }
 
-        # Categories always allowed, no checkbox required
+        # Categories always allowed without checkbox
         categories_always_allowed = {'jacket', 'pants', 'set'}
 
-        # --- Parse variation dropdowns and extra price fields only if checkbox selected or category always allowed
+        # Parse all POST keys for options and prices
         for key, values in request.POST.lists():
             if key in ['quantity', 'override', 'csrfmiddlewaretoken']:
                 continue
@@ -80,8 +86,19 @@ def cart_add(request, product_id):
             if '_' in key and not key.endswith('_price'):
                 category, option_name = key.split('_', 1)
 
-                # Allow parsing if category is in always allowed or has checkbox selected
                 if category in categories_always_allowed or checkbox_flags.get(categories_with_checkboxes.get(category, ''), False):
+                    # Skip adding the base variation option if base price is already added
+                    # For example, if category=='shirt' and option_name=='shirt', and base price exists, skip
+                    if category == 'shirt' and option_name == 'shirt' and checkbox_flags.get('shirt_selected'):
+                        # base price already added, skip this variation option
+                        continue
+                    
+                    # When parsing vest options, skip adding the vest option price if base vest checkbox is selected
+                    if category == 'vest' and option_name == 'vest' and checkbox_flags.get('vest_selected'):
+                        # If you want to avoid double counting, skip this variation option
+                        continue
+
+
                     selected_options.setdefault(category, {})
                     for val in values:
                         try:
@@ -93,35 +110,38 @@ def cart_add(request, product_id):
                             }
                         except (VariationOption.DoesNotExist, ValueError):
                             pass
-                else:
-                    # Not selected and not allowed category, skip
-                    continue
 
+
+            # Parse price fields (e.g. vest_vest_31_price: 50.00)
             elif key.endswith('_price'):
                 price_val = values[0] if values else '0.00'
-                base_key = key[:-6]  # Strip '_price'
-                category_prefix = base_key.split('_')[0]
 
-                # Skip if category requires checkbox and it's not selected
-                if category_prefix in categories_with_checkboxes:
-                    checkbox_key = categories_with_checkboxes[category_prefix]
-                    if not checkbox_flags.get(checkbox_key):
-                        continue
+                match = re.match(r'^([a-z]+)_(.+?)_(\d+)_price$', key.lower())
+                if not match:
+                    continue
 
-                # Only proceed if category is allowed
-                if category_prefix in categories_always_allowed or checkbox_flags.get(categories_with_checkboxes.get(category_prefix, ''), False):
-                    for cat_opt, options in selected_options.items():
-                        for opt_key, opt_data in options.items():
-                            price_key_exact = f"{cat_opt}_{opt_key}_price".replace(" ", "-").lower()
-                            if key.lower() == price_key_exact:
-                                opt_data['price_difference'] = price_val
-                                print(f"Matching price: {key} → {cat_opt}_{opt_key} → {price_val}")
+                category_prefix, option_name_slug, option_id_str = match.groups()
+                option_id = int(option_id_str)
 
+                # Check if this category is allowed
+                checkbox_key = categories_with_checkboxes.get(category_prefix)
+                allowed = (category_prefix in categories_always_allowed) or (checkbox_key and checkbox_flags.get(checkbox_key))
+                if not allowed:
+                    # Skip prices for categories not selected
+                    continue
 
+                # Find matching option inside selected_options to update price_difference
+                for cat_opt, options in selected_options.items():
+                    for opt_key, opt_data in options.items():
+                        opt_key_slug = opt_key.replace(" ", "-").lower()
+                        full_key = f"{cat_opt}_{opt_key_slug}_price"
+                        if key.lower() == full_key or opt_data.get('id') == option_id:
+                            opt_data['price_difference'] = price_val
+                            print(f"Matched price: {key} → {cat_opt}_{opt_key} → {price_val}")
 
         print("Final selected_options dict:", selected_options)
 
-        # --- Customization fields (free text)
+        # Customization free text fields
         customizations = {}
         if jacket_text := request.POST.get("jacket_monogram_text", "").strip():
             customizations["jacket_monogram_text"] = jacket_text
@@ -130,7 +150,7 @@ def cart_add(request, product_id):
 
         print("Final customizations dict:", customizations)
 
-        # --- Add to cart
+        # Add to cart
         cart.add(
             product=product,
             quantity=cd['quantity'],
@@ -139,7 +159,7 @@ def cart_add(request, product_id):
             customizations=customizations,
         )
 
-        # --- AJAX response
+        # AJAX response
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             extra_price = Decimal('0.00')
             for category, options in selected_options.items():
@@ -160,6 +180,7 @@ def cart_add(request, product_id):
             })
 
     return redirect('cart:cart_detail')
+
 
 
 

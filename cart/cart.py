@@ -42,22 +42,20 @@ class Cart:
         for category, options in selected_options.items():
             if not isinstance(options, dict):
                 continue
+
+            # Skip unselected optional items
+            if category in ['vest', 'monogram', 'shirt_monogram', 'shirt'] and not options.get('price'):
+                continue
+
             for key, option in options.items():
+                if not isinstance(option, dict):
+                    continue
+
                 price_diff = option.get('price_difference')
                 if price_diff:
-                    # Normalize key: remove repeated substrings or use category only
-                    normalized_key = key
-                    # Example heuristic: if key contains repeated words, keep only one instance
-                    parts = key.split('_')
-                    if len(parts) > 2 and parts[0] == parts[1] == parts[2]:
-                        normalized_key = '_'.join(parts[0:2])  # or just parts[0]
-
-                    # Use category + normalized key to detect duplicates
-                    unique_id = f"{category}_{normalized_key}"
-
+                    unique_id = f"{category}_{key}"
                     if unique_id in seen_prices:
                         continue
-
                     try:
                         extra_price += Decimal(price_diff)
                         seen_prices.add(unique_id)

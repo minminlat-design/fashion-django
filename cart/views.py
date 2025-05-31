@@ -268,6 +268,7 @@ def cart_update_quantity(request):
             "item_total": f"{item_total:.2f}",
             "total_price": f"{total_price:.2f}",
             "quantity": quantity,
+            "item_count": len(cart),
         })
 
     except Exception as e:

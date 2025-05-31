@@ -583,6 +583,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
                     }
 
+
+                    // ✅ Update cart count in navbar
+                    const cartCountElem = document.querySelector('.nav-cart .count-box');
+                    if (cartCountElem && data.item_count !== undefined) {
+                        cartCountElem.textContent = data.item_count;
+                    }
+
+                    
+
                     if (typeof updateShippingProgress === "function") {
                         updateShippingProgress();
                     }
@@ -623,6 +632,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     const totalPriceElem = document.querySelector('#cart-total, #cart-total-price');
                     if (totalPriceElem && data.total_price !== undefined) {
                         totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    // ✅ Update cart item count in navbar
+                    const cartCountElem = document.querySelector('.nav-cart .count-box');
+                    if (cartCountElem && data.item_count !== undefined) {
+                        cartCountElem.textContent = data.item_count;
                     }
 
                     if (typeof updateShippingProgress === "function") {
@@ -669,6 +684,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (totalPriceElem && data.total_price !== undefined) {
                         totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
                     }
+
+                    
+
                 }
 
                 if (typeof updateShippingProgress === "function") {

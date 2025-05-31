@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 from django.conf import settings
 from store.models import Product
@@ -66,7 +67,7 @@ class Cart:
 
 
 
-    def add(self, product, quantity=1, override_quantity=False, selected_options=None, customizations=None):
+    def add(self, product, quantity=1, override_quantity=False, selected_options=None, customizations=None, delivery_date=None):
         product_id = str(product.id)
         options_key = self._generate_options_key(selected_options, customizations)
         cart_key = f"{product_id}:{options_key}"
@@ -81,6 +82,7 @@ class Cart:
                 'price': str(final_price),
                 'selected_options': selected_options or {},
                 'customizations': customizations or {},
+                'delivery_date': delivery_date,
             }
 
         if override_quantity:
@@ -121,6 +123,13 @@ class Cart:
             if product:
                 item = item.copy()
                 item['product'] = product
+                
+                # ✅ Add delivery_date here
+                delivery_days = getattr(product, 'delivery_days', 7) or 7
+                delivery_date = datetime.today() + timedelta(days=delivery_days)
+                item['delivery_date'] = delivery_date.strftime("%b %d, %Y")
+                
+                
                 base_price = Decimal(item['price'])
 
                 selected_options = item.get('selected_options', {})
@@ -133,11 +142,15 @@ class Cart:
                 item['selected_options'] = selected_options
                 item['customizations'] = item.get('customizations', {})
                 item['cart_key'] = cart_key
+                
 
                 yield item
+                
 
     def __len__(self):
         return sum(item['quantity'] for item in self.cart.values() if isinstance(item, dict))
+    
+    
 
     def get_total_price(self):
         total = Decimal('0.00')
@@ -166,13 +179,16 @@ class Cart:
             'qualified': qualified
         }
 
-    def update(self, product, quantity, selected_options=None, customizations=None):
+    def update(self, product, quantity, selected_options=None, customizations=None, delivery_date=None):
         product_id = str(product.id)
         options_key = self._generate_options_key(selected_options, customizations)
         cart_key = f"{product_id}:{options_key}"
         if cart_key in self.cart:
             self.cart[cart_key]['quantity'] = quantity
+            if delivery_date:
+                self.cart[cart_key]['delivery_date'] = delivery_date
             self.save()
+
 
     def get_item_total(self, product, selected_options=None, customizations=None):
         product_id = str(product.id)

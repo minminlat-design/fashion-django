@@ -9,6 +9,9 @@ from store.models import Product, ProductVariation
 from variation.models import VariationOption
 from .cart import Cart, CartSettings
 from .forms import CartAddProductForm
+from datetime import datetime, timedelta
+
+
 
 
 
@@ -144,6 +147,11 @@ def cart_add(request, product_id):
             customizations["shirt_monogram_text"] = shirt_text
 
         print("Final customizations dict:", customizations)
+        
+        # 🕒 Compute estimated delivery date
+        delivery_days = product.delivery_days or 7  # Default fallback
+        delivery_date = (datetime.today() + timedelta(days=delivery_days)).strftime("%b %d, %Y")
+
 
         # Add to cart
         cart.add(
@@ -152,6 +160,7 @@ def cart_add(request, product_id):
             override_quantity=cd['override'],
             selected_options=selected_options,
             customizations=customizations,
+            delivery_date=delivery_date,
         )
 
         # AJAX response
@@ -207,16 +216,21 @@ def cart_detail(request):
         )
 
     for item in cart:
+        # Form to update quantity
         item['update_quantity_form'] = CartAddProductForm(
             initial={'quantity': item['quantity'], 'override': True}
         )
 
+        
+   
+
     return render(request, 'cart/detail.html', {
-        'cart': cart,
+        'cart': cart,  # cart now includes delivery dates per item
         'free_shipping_data': free_shipping_data,
         'gift_wrap': gift_wrap_status,
         'gift_wrap_price': settings_obj.gift_wrap_price,
     })
+
 
 
 @require_GET

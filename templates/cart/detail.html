@@ -54,25 +54,36 @@ Your shopping cart
     <a href="{{ product.get_absolute_url }}" class="cart-title link">
         {{ product.name }}
     </a>
+
+    
+  <p class="delivery-date small">Delivery by: {{ item.delivery_date }}</p>
+  <!-- other product info -->
+
+
+
     
   <div class="cart-meta-variant">
   {% if item.selected_options %}
     {% for category, options in item.selected_options.items %}
-      {% if options.name %}
-        <strong>{{ category|capfirst }}</strong>: {{ options.name }}
-        {% if not forloop.last %} / {% endif %}
-      {% else %}
-        <strong>{{ category|capfirst }}</strong>:
-        {% for sub_option in options.items %}
-          {{ sub_option.0|capfirst }}: {{ sub_option.1.name }}
-          {% if not forloop.last or not forloop.parentloop.last %} / {% endif %}
-        {% endfor %}
+      {% if category|lower != 'base price' and category|lower != 'set' %}
+        {% if options.name %}
+          <strong>{{ category|capfirst }}</strong>: {{ options.name }}
+          {% if not forloop.last %} / {% endif %}
+        {% else %}
+          <strong>{{ category|capfirst }}</strong>:
+          {% for sub_option in options.items %}
+            {{ sub_option.0|capfirst }}: {{ sub_option.1.name }}
+            {% if not forloop.last or not forloop.parentloop.last %} / {% endif %}
+          {% endfor %}
+        {% endif %}
       {% endif %}
     {% endfor %}
   {% else %}
     No variants selected
   {% endif %}
 </div>
+
+
 
 <div class="cart-meta-customizations">
   {% if item.customizations %}
@@ -772,6 +783,8 @@ document.getElementById('cart-gift-checkbox').addEventListener('change', functio
 
 
 </script>
+
+
 
 
 

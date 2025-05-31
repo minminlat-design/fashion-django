@@ -26,6 +26,8 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     discounted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
+    delivery_days = models.PositiveIntegerField(default=7)
+    
     style = models.ForeignKey('Style', on_delete=models.SET_NULL, null=True, blank=True)  # For suit, jacket, pants styles
     color = models.ForeignKey('Color', on_delete=models.SET_NULL, null=True, blank=True)  # Default/primary color
     material = models.ForeignKey('Material', on_delete=models.SET_NULL, null=True, blank=True)

@@ -115,7 +115,10 @@
 
                                                 <div class="col-lg-2">
                                                     <div class="mega-menu-item">
-                                                        <div class="menu-heading">{{ category.name }}</div>
+                                                        <div class="menu-heading">
+                                                            <a href="{{ category.get_absolute_url }}">
+                                                            {{ category.name }}</a>
+                                                        </div>
                                                         <ul class="menu-list">
 
                                                             
@@ -136,6 +139,9 @@
                                                 {% endfor %}
 
                                                 <!-- show only if main category is "Shop"-->
+                                               
+                                                {% comment "navbar latest arrival images" %}
+                                                
                                                
                                                 <!-- nave products display shop -->
                                                 {% if main.name == "Shop" %} 
@@ -209,6 +215,8 @@
                                                 </div>
 
                                                 {% endif %}
+
+                                                 {% endcomment %}
 
                                                 {% if main.name == "Features" %}
 

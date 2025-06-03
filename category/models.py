@@ -6,6 +6,7 @@ class MainCategory(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     name_order = models.IntegerField(default=0)
+    image = models.ImageField(upload_to='main_categories/%Y/%m/%d/', null=True, blank=True)
     
     class Meta:
         ordering = ['name_order', 'name']
@@ -29,6 +30,7 @@ class Category(models.Model):
     image = models.ImageField(upload_to='category/%Y/%m/%d', blank=True)
     name_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='categories/%Y/%m/%d/', null=True, blank=True)
     
     class Meta:
         ordering = ['name_order', 'name']
@@ -50,6 +52,7 @@ class SubCategory(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
     name_order = models.IntegerField(default=0)
+    image = models.ImageField(upload_to='sub_categories/%Y/%m/%d/', null=True, blank=True)
     
     class Meta:
         ordering = ['name_order', 'name']

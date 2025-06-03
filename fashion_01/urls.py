@@ -24,8 +24,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('home.urls', namespace='home')),
     path('cart/', include('cart.urls', namespace='cart')),
+    #path('wishlist/', include('wishlist.urls', namespace='wishlist')),
     path('store/', include('store.urls', namespace='store')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
+     path('search/', include('search.urls', namespace='search')),
    
 ]
 

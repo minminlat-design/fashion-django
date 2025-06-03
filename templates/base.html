@@ -27,6 +27,8 @@
     <link rel="apple-touch-icon-precomposed" href="{% static 'images/logo/favicon.png' %}">
 
     <!-- Optional CSS -->
+
+
 <style>
   input.variation-radio:checked + img,
   input.variation-radio:checked + div.bg-secondary {
@@ -49,6 +51,41 @@
   input[type="radio"]:checked + label img {
     border: 3px solid #007bff;
   }
+
+
+
+/* Reset outer label styling */
+label.style-option,
+label.color-option {
+    border: none;
+    background: none;
+    padding: 0;
+    box-shadow: none;
+}
+
+/* Wrap the image to apply selected style */
+.option-img-wrapper {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 5px;
+    transition: all 0.2s ease;
+}
+
+/* Style when selected */
+input[type="radio"]:checked + label.style-option .option-img-wrapper {
+    border: 2px solid #007bff;
+    background-color: #e6f0ff;
+    box-shadow: 0 0 5px #007bff;
+}
+
+input[type="radio"]:checked + label.color-option .option-img-wrapper {
+    border: 2px solid #28a745;
+    background-color: #eaffea;
+    box-shadow: 0 0 5px #28a745;
+}
+
+
+  
 
 
 
@@ -203,9 +240,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedSet = setItemsSelect.options[setItemsSelect.selectedIndex];
     total += parseFloat(selectedSet.dataset.price || 0);
 
+
+
+
     // Customization options for active set item
     if (customizationFields.style.display !== "none") {
       const activeGroup = document.querySelector(`.customization-group[data-target="${currentTarget}"]`);
+     
       if (activeGroup) {
         const checkedRadios = activeGroup.querySelectorAll('input[type="radio"]:checked');
         checkedRadios.forEach((radio) => {
@@ -213,6 +254,10 @@ document.addEventListener("DOMContentLoaded", function () {
           total += extra;
         });
       }
+
+
+     
+      
 
       // Jacket monogram
       if (currentTarget === "jacket" && monogramCheckbox && monogramCheckbox.checked) {
@@ -296,6 +341,417 @@ if (form) {
 }
 
 </script>
+
+
+{% comment "mini side bar mini cart" %}
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("product-form");
+  
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();  // Prevent traditional form submission
+
+      const url = form.action;
+      const formData = new FormData(form);
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData,
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json(); // You may want your Django view to return JSON
+        }
+        throw new Error("Network response was not ok.");
+      })
+      .then(data => {
+        // Optionally: update cart items / quantity here via data
+        // Then show the Bootstrap modal
+        const modalElement = document.getElementById("shoppingCart");
+        const cartModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        cartModal.show();
+
+      })
+      .catch(error => {
+        console.error("There was a problem with the fetch operation:", error);
+      });
+    });
+  }
+});
+</script>
+
+{% endcomment %}
+
+
+
+
+<!-- cart detail js code block-->
+
+<script>
+   function updateShippingProgress() {
+  fetch("{% url 'cart:cart_shipping_info' %}")
+    .then(response => response.json())
+    .then(data => {
+      const progressFill = document.getElementById('progress-fill');
+      const progressCar = document.querySelector('.progress-car');
+      const progressMsg = document.getElementById('progress-msg');
+
+      let progressPercent = Math.min(Math.max(data.progress * 100, 0), 100);
+      progressFill.style.width = progressPercent + '%';
+      progressCar.style.left = progressPercent + '%';
+
+      if (data.qualified) {
+        progressMsg.textContent = "Congratulations! You qualify for free shipping.";
+      } else {
+        progressMsg.textContent = `Add $${data.remaining} more to qualify for free shipping.`;
+      }
+    })
+    .catch(err => {
+      console.error('Failed to fetch shipping progress:', err);
+    });
+}
+
+// ✅ Move this OUTSIDE
+document.addEventListener('DOMContentLoaded', () => {
+  updateShippingProgress();
+});
+
+</script>
+
+
+
+<!-- remove buttton with ajax -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".remove-cart").forEach(btn => {
+        btn.addEventListener("click", function () {
+            const productId = this.dataset.productId;
+            const url = this.dataset.url;
+            const csrfToken = this.dataset.csrf;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: "quantity=1"  // can be empty, your backend ignores it
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Find the closest parent row element to remove
+                    const row = this.closest(".tf-cart-item"); // adjust selector to your cart item container
+                    if (row) row.remove();
+
+                    // Update the cart total display
+                    const totalCartPrice = document.getElementById("cart-total");
+                    if (totalCartPrice) {
+                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    // Optional: show empty cart message if needed
+                    if (data.item_count === 0) {
+                        // Show your empty cart message, e.g.:
+                        // document.getElementById("empty-cart-message").style.display = "block";
+                    }
+                    updateShippingProgress();
+
+                } else {
+                    console.error("Failed to remove item.");
+                }
+            })
+            .catch(error => console.error("AJAX error:", error));
+        });
+    });
+});
+
+</script>
+
+
+<!-- Ajax updating quantity, item total price, cart total price, and remove item -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Helper: get CSRF token from cookie or hidden input
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i=0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+
+    // --- Quantity update using cart_key ---
+    document.querySelectorAll(".btn-quantity[data-cart-key]").forEach(button => {
+        button.addEventListener("click", function () {
+            const isIncrement = this.classList.contains("btnincrease");
+            const cartKey = this.dataset.cartKey;
+            if (!cartKey) {
+                alert("Missing cart key!");
+                return;
+            }
+
+            const container = this.closest(".wg-quantity");
+            const input = container.querySelector(".quantity-input");
+            let currentQuantity = parseInt(input.value);
+            const newQuantity = isIncrement ? currentQuantity + 1 : Math.max(1, currentQuantity - 1);
+
+            fetch(`/cart/update-quantity/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    cart_key: cartKey,
+                    quantity: newQuantity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = newQuantity;
+
+                    const itemRow = container.closest("[data-cart-key]");
+                    if (itemRow) {
+                        const itemTotalElement = itemRow.querySelector(".item-total");
+                        if (itemTotalElement && data.item_total !== undefined) {
+                            itemTotalElement.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                        }
+                    }
+
+                    const totalCartPrice = document.querySelector("#cart-total, #cart-total-price");
+                    if (totalCartPrice && data.total_price !== undefined) {
+                        totalCartPrice.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+
+                    // ✅ Update cart count in navbar
+                    const cartCountElem = document.querySelector('.nav-cart .count-box');
+                    if (cartCountElem && data.item_count !== undefined) {
+                        cartCountElem.textContent = data.item_count;
+                    }
+
+
+
+                    
+
+                    if (typeof updateShippingProgress === "function") {
+                        updateShippingProgress();
+                    }
+                } else {
+                    alert(`Failed to update quantity: ${data.error}`);
+                }
+            })
+            .catch(err => console.error("Error updating quantity:", err));
+        });
+    });
+
+    // --- Remove item from cart ---
+    document.querySelectorAll('.remove-cart').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const url = this.dataset.url;
+
+            if (!productId || !url) {
+                alert("Missing product ID or URL for removal.");
+                return;
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove product row from DOM
+                    const row = document.querySelector(`[data-product-id="${productId}"]`);
+                    if (row) row.remove();
+
+                    // Update cart total price display
+                    const totalPriceElem = document.querySelector('#cart-total, #cart-total-price');
+                    if (totalPriceElem && data.total_price !== undefined) {
+                        totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    // ✅ Update cart item count in navbar
+                    const cartCountElem = document.querySelector('.nav-cart .count-box');
+                    if (cartCountElem && data.item_count !== undefined) {
+                        cartCountElem.textContent = data.item_count;
+                    }
+
+                    // Remove note block if cart is empty
+                    if (data.item_count === 0) {
+                        const noteBlock = document.getElementById('cart-note-block');
+                        if (noteBlock) {
+                            noteBlock.remove();
+                        }
+                    }
+                    
+
+                    if (typeof updateShippingProgress === "function") {
+                        updateShippingProgress();
+                    }
+                } else {
+                    alert('Failed to remove item from cart.');
+                }
+            })
+            .catch(error => console.error('Error removing item:', error));
+        });
+    });
+
+    // --- Quantity update using product_id ---
+    function updateQuantityByProductId(productId, newQuantity) {
+        if (!productId) return;
+
+        fetch(`/cart/update-quantity/`, {  // Adjust URL if needed
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: newQuantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.querySelector(`[data-product-id="${productId}"]`);
+                if (row) {
+                    const qtyInput = row.querySelector('.quantity-input');
+                    if (qtyInput) qtyInput.value = data.quantity;
+
+                    const totalCell = row.querySelector('.item-total');
+                    if (totalCell && data.item_total !== undefined) {
+                        totalCell.textContent = `$${parseFloat(data.item_total).toFixed(2)}`;
+                    }
+
+                    const totalPriceElem = document.querySelector('#cart-total, #cart-total-price');
+                    if (totalPriceElem && data.total_price !== undefined) {
+                        totalPriceElem.textContent = `$${parseFloat(data.total_price).toFixed(2)}`;
+                    }
+
+                    
+
+                }
+
+                if (typeof updateShippingProgress === "function") {
+                    updateShippingProgress();
+                }
+            } else {
+                alert('Failed to update quantity: ' + data.error);
+            }
+        })
+        .catch(error => console.error('Error updating quantity:', error));
+    }
+
+    // Bind increment buttons by product ID, but only those WITHOUT data-cart-key
+    document.querySelectorAll('.btnincrease:not([data-cart-key])').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.id;
+            const row = document.querySelector(`[data-product-id="${productId}"]`);
+            if (!row) return;
+            const qtyInput = row.querySelector('.quantity-input');
+            if (!qtyInput) return;
+            let currentQty = parseInt(qtyInput.value);
+            updateQuantityByProductId(productId, currentQty + 1);
+        });
+    });
+
+    // Bind decrement buttons by product ID, but only those WITHOUT data-cart-key
+    document.querySelectorAll('.btndecrease:not([data-cart-key])').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.id;
+            const row = document.querySelector(`[data-product-id="${productId}"]`);
+            if (!row) return;
+            const qtyInput = row.querySelector('.quantity-input');
+            if (!qtyInput) return;
+            let currentQty = parseInt(qtyInput.value);
+            if (currentQty > 1) {
+                updateQuantityByProductId(productId, currentQty - 1);
+            }
+        });
+    });
+});
+</script>
+
+
+
+<script>
+document.getElementById('cart-gift-checkbox').addEventListener('change', function() {
+    const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfTokenInput) {
+        console.error("CSRF token input not found");
+        return;
+    }
+    const csrfToken = csrfTokenInput.value;
+    const giftWrap = this.checked;
+
+    fetch('/cart/toggle-gift-wrap/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify({ enable: giftWrap })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update checkbox state just in case
+            document.getElementById('cart-gift-checkbox').checked = data.gift_wrap;
+
+            // Update total price dynamically
+            const totalPriceElement = document.getElementById('cart-total');
+            if (totalPriceElement) {
+                totalPriceElement.textContent = `$${data.total_price}`;
+            }
+
+            // Optionally update gift wrap price display or any messages here
+
+        } else {
+            alert('Error updating gift wrap: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Fetch error:', error));
+});
+
+
+</script>
+
+
+
+<!-- monogram radio selection shirt-->
+
+
+
+
+
+
+
 
 
     

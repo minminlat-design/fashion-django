@@ -180,7 +180,7 @@ def cart_add(request, product_id):
                 'success': True,
                 'quantity': cd['quantity'],
                 'total_price': f"{cart.get_total_price():.2f}",
-                'item_total': f"{item_total:.2f}"
+                'item_total': f"{item_total:.2f}",
             })
 
     return redirect('cart:cart_detail')

@@ -306,10 +306,18 @@
                             <li class="nav-search"><a href="#canvasSearch" data-bs-toggle="offcanvas"
                                     aria-controls="offcanvasLeft" class="nav-icon-item"><i
                                         class="icon icon-search"></i></a></li>
+
+                            {% if user.id is not None %}
+
+                            <li class="nav-account"><a href="#">Dashboard</a></li>
+                             <li class="nav-account">{{ user.first_name|default:user.username }}</li>
+                             <li class="nav-account"><a href="{% url 'logout' %}">Logout</a></li>
+                            
+                            {% else %}
                             <li class="nav-account"><a href="#login" data-bs-toggle="modal" class="nav-icon-item"><i
                                         class="icon icon-account"></i></a></li>
-                            <li class="nav-wishlist"><a href="wishlist.html" class="nav-icon-item"><i
-                                        class="icon icon-heart"></i><span class="count-box">0</span></a></li>
+                            {% endif %}
+                           
 
                             <li class="nav-cart">
                                 {% with total_items=cart|length %}

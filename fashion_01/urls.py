@@ -27,7 +27,8 @@ urlpatterns = [
     #path('wishlist/', include('wishlist.urls', namespace='wishlist')),
     path('store/', include('store.urls', namespace='store')),
     path('ckeditor/', include('ckeditor_uploader.urls')),
-     path('search/', include('search.urls', namespace='search')),
+    path('search/', include('search.urls', namespace='search')),
+    path('account/', include('accounts.urls')),
    
 ]
 

@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    "accounts",
     "adminsortable2",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "home",
     "category",
-    "accounts",
     "cart",
     "store",
     "easy_thumbnails",
@@ -179,3 +179,15 @@ CKEDITOR_CONFIGS = {
     }
 }
 
+
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+
+
+
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.ERROR: "danger",
+}

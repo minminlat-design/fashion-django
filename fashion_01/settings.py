@@ -179,15 +179,24 @@ CKEDITOR_CONFIGS = {
     }
 }
 
-
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'dashboard'  # or any view you want
 LOGIN_URL = 'login'
-LOGOUT_URL = 'logout'
+LOGOUT_REDIRECT_URL = '/account/login/'
+
+
 
 
 
 from django.contrib.messages import constants as messages
 
 MESSAGE_TAGS = {
-    messages.ERROR: "danger",
+    messages.DEBUG: 'secondary',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
 }
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

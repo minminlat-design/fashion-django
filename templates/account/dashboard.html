@@ -19,29 +19,32 @@
                 <div class="row">
                     <div class="col-lg-3">
                         <div class="wrap-sidebar-account">
+                           
                             <ul class="my-account-nav">
-                                <li><span class="my-account-nav-item active">Dashboard</span></li>
-                                <li><a href="my-account-orders.html" class="my-account-nav-item">Orders</a></li>
-                                <li><a href="my-account-address.html" class="my-account-nav-item">Address</a></li>
-                                <li><a href="my-account-edit.html" class="my-account-nav-item">Account Details</a></li>
-                                <li><a href="my-account-wishlist.html" class="my-account-nav-item">Wishlist</a></li>
-                                <li><a href="login.html" class="my-account-nav-item">Logout</a></li>
+                                 {% if request.user.is_authenticated %}
+                                <li>
+                                    <a href="{% url 'dashboard' %}" class="my-account-nav-item {% if section == 'dashboard' %}active{% endif %}" data-section="dashboard">Dashboard</a></li>
+
+                                <li><a href="#" class="my-account-nav-item {% if section == 'orders' %}active{% endif %}" data-section="orders">Orders</a></li>
+                                <li><a href="#" class="my-account-nav-item {% if section == 'address' %}active{% endif %}" data-section="address">Address</a></li>
+                                <li><a href="#" class="my-account-nav-item {% if section == 'account_details' %}active{% endif %}" data-section="account_details">Account Details</a></li>
+                                
+                                
+                                <form action="{% url 'logout' %}" method="post">
+                                    {% csrf_token %}
+                                   <li><button type="submit" class="my-account-nav-item">Logout</button></li>
+                                </form>
+                                {% else %}
+                                <li><a href="{% url 'login' %}" class="my-account-nav-item">Log-in</a></li>
+                                {% endif %}
+                                
                             </ul>
+                            
                         </div>
                     </div>
                     <div class="col-lg-9">
-                        <div class="my-account-content account-dashboard">
-                            <div class="mb_60">
-                                <h5 class="fw-5 mb_20">Hello Themesflat</h5>
-                                <p>
-                                    From your account dashboard you can view your <a class="text_primary"
-                                        href="my-account-orders.html">recent orders</a>, manage your <a
-                                        class="text_primary" href="my-account-address.html">shipping and billing
-                                        address</a>, and <a class="text_primary" href="my-account-edit.html">edit your
-                                        password and account details</a>.
-                                </p>
-                            </div>
-                        </div>
+                        <div class="my-account-content account-dashboard" id="account-content">
+                            <!-- ajax call content here -->
                     </div>
                 </div>
             </div>

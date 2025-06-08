@@ -507,6 +507,7 @@
 <!-- /canvasSearch -->
 
 
+{% comment "modal login" %}
 
 
 <!-- modal login -->
@@ -516,21 +517,22 @@
                 <div class="header">
                     <div class="demo-title">Log in</div>
                     <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+                      {% include "includes/alerts.html" %}
                 </div>
                 <div class="tf-login-form">
                     <form class="" action="{% url 'login' %}" method="post" accept-charset="utf-8">
                         {% csrf_token %}
                         <div class="tf-field style-1">
                             <input class="tf-field-input tf-input" placeholder=" " type="email" 
-                            name="{{ form.email.name }}" id="login-email" value="{{ form.email.value|default_if_none:''}}">
+                            name="email" id="login-email">
                             <label class="tf-field-label" for="login-email">Email *</label>
-                            {{ form.email.errors }}
+                           
                         </div>
                         <div class="tf-field style-1">
                             <input class="tf-field-input tf-input" placeholder=" " type="password" 
-                            name="{{ form.password.name }}" id="login-password">
+                            name="password" id="login-password">
                             <label class="tf-field-label" for="login-password">Password *</label>
-                            {{ form.password.errors }}
+                            
                         </div>
 
                         <div>
@@ -594,30 +596,31 @@
         <div class="header">
             <div class="demo-title">Register</div>
             <span class="icon-close icon-close-popup" data-bs-dismiss="modal"></span>
+              {% include "includes/alerts.html" %}
         </div>
         <div class="tf-login-form">
             <form class="" action="{% url 'register' %}" method="post">
                 {% csrf_token %}
                 <div class="tf-field style-1">
-                    <input class="tf-field-input tf-input" placeholder=" " type="text" name="">
+                    <input class="tf-field-input tf-input" placeholder=" " type="text" name="{{ form.first_name.name }}" value="{{ form.first_name.value }}">
                     <label class="tf-field-label" for="">First name</label>
                 </div>
                 <div class="tf-field style-1">
-                    <input class="tf-field-input tf-input" placeholder=" " type="text" name="">
+                    <input class="tf-field-input tf-input" placeholder=" " type="text" name="{{ form.last_name.name }}" value="{{ form.last_name.value }}">
                     <label class="tf-field-label" for="">Last name</label>
                 </div>
                 <div class="tf-field style-1">
-                    <input class="tf-field-input tf-input" placeholder=" " type="email" name="">
+                    <input class="tf-field-input tf-input" placeholder=" " type="email" name="{{ form.email.name }}" value="{{ form.email.value }}">
                     <label class="tf-field-label" for="">Email *</label>
                 </div>
                 <div class="tf-field style-1">
-                    <input class="tf-field-input tf-input" placeholder=" " type="password" name="">
+                    <input class="tf-field-input tf-input" placeholder=" " type="password" name="{{ form.password.name }}" value="">
                     <label class="tf-field-label" for="">Password *</label>
                 </div>
                 <div class="bottom">
                     <div class="w-100">
-                        <a href="register.html"
-                            class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Register</span></a>
+                        <button type="submit"
+                            class="tf-btn btn-fill animate-hover-btn radius-3 w-100 justify-content-center"><span>Register</span></button>
                     </div>
                     <div class="w-100">
                         <a href="#login" data-bs-toggle="modal" class="btn-link fw-6 w-100 link">
@@ -634,6 +637,7 @@
 <!-- /modal login -->
 
 
+{% endcomment %}
 
 
 

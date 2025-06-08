@@ -30,6 +30,14 @@
 
 
                     <div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+
                         <form class="" id="register-form" action="{% url 'register' %}" method="post" accept-charset="utf-8"
                             data-mailchimp="true">
                             {% csrf_token %}
@@ -39,20 +47,32 @@
 
 
                             <div class="tf-field style-1 mb_15">
-                                {{ form.first_name }}
+                                <input class="tf-field-input tf-input" placeholder=" " type="text" id="property1"
+                                    name="{{ form.first_name.name }}" value="{{ form.first_name.value|default_if_none:'' }}" required>
+                                
                                 <label class="tf-field-label fw-4 text_black-2" for="property1">First name</label>
+                                 {{ form.first_name.errors }}
                             </div>
                             <div class="tf-field style-1 mb_15">
-                                {{ form.last_name }}
+                                <input class="tf-field-input tf-input" placeholder=" " type="text" id="property2"
+                                    name="{{ form.last_name.name }}" value="{{ form.last_name.value|default_if_none:'' }}" required>
+                                
                                 <label class="tf-field-label fw-4 text_black-2" for="property2">Last name</label>
+                                {{ form.last_name.errors }}
                             </div>
                             <div class="tf-field style-1 mb_15">
-                                {{ form.email }}
+                                <input class="tf-field-input tf-input" placeholder=" " type="email" id="property3"
+                                    name="{{ form.email.name }}" value="{{ form.email.value|default_if_none:'' }}" required>
+                                
                                 <label class="tf-field-label fw-4 text_black-2" for="property3">Email</label>
+                                {{ form.email.errors }}
                             </div>
                             <div class="tf-field style-1 mb_30">
-                                {{ form.password }}
+                                <input class="tf-field-input tf-input" placeholder=" " type="password" id="property4"
+                                    name="{{ form.password.name }}" required>
+                                
                                 <label class="tf-field-label fw-4 text_black-2" for="property4">Password</label>
+                                {{ form.password.errors }}
                             </div>
                             
 

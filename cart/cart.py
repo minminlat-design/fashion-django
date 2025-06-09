@@ -78,6 +78,7 @@ class Cart:
 
         if cart_key not in self.cart:
             self.cart[cart_key] = {
+                'product_id': product.id,
                 'quantity': 0,
                 'price': str(final_price),
                 'selected_options': selected_options or {},

@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_GET
 from django.views.decorators.csrf import csrf_exempt
 from measurement.forms import DynamicMeasurementForm
-from measurement.models import UserMeasurement
+from measurement.models import ProductType, UserMeasurement
 from store.models import Product, ProductVariation
 from variation.models import VariationOption
 from .cart import Cart, CartSettings
@@ -14,7 +14,8 @@ from .forms import CartAddProductForm
 from datetime import datetime, timedelta
 from .models import CartItem
 from django.contrib.auth.decorators import login_required
-import logging
+from django.contrib import messages
+
 
 
 
@@ -310,57 +311,69 @@ def toggle_gift_wrap(request):
     
     
 # move session to the cart
-
 @login_required
 def cart_to_checkout(request):
     print("[DEBUG] Entered cart_to_checkout view")
-    # Prevent duplicate CartItem creation
-    if CartItem.objects.filter(user=request.user, user_measurement__isnull=True).exists():
-        print("[DEBUG] CartItems already exist for this user without measurement.")
-        return redirect('cart:measurement_form_view')
 
     cart = Cart(request)
+    session_cart = request.session.get('cart', {})
 
-    print("[DEBUG] Raw session cart data:", request.session.get('cart'))
-    print("[DEBUG] Cart object contents:")
-    for i, item in enumerate(cart, start=1):
-        print(f"[DEBUG] Item {i}: {item}")
+    print("[DEBUG] Raw session cart data:", session_cart)
+
+    # ✅ Step 1: Clear old CartItems for this user
+    CartItem.objects.filter(user=request.user).delete()
+    print("[DEBUG] Cleared existing CartItems for user")
 
     count = 0
-    for item in cart:
-        print(f"[DEBUG] Copying item to CartItem: {item}")
+    for key, item in session_cart.items():
+        try:
+            product_id = int(key.split(":")[0])
+        except (ValueError, IndexError):
+            print(f"[WARN] Invalid cart key format: {key}")
+            continue
+
+        product = get_object_or_404(Product, id=product_id)
+        selected_options = item.get('selected_options', {})
+        customizations = item.get('customizations', {})
+        quantity = item.get('quantity', 1)
+        base_price = product.discounted_price or product.price
+
+        print(f"[DEBUG] Creating new CartItem for {product.name}")
         CartItem.objects.create(
             user=request.user,
-            product=item['product'],
-            quantity=item['quantity'],
-            base_price=item['product'].discounted_price or item['product'].price,
-            selected_options=item.get('selected_options', {}),
-            customizations=item.get('customizations', {}),
+            product=product,
+            quantity=quantity,
+            base_price=base_price,
+            selected_options=selected_options,
+            customizations=customizations,
             gift_wrap=cart.gift_wrap,
         )
         count += 1
 
+    # (Optional) Clear session cart to avoid resync confusion
+    # cart.clear()
+
     print(f"[DEBUG] Finished copying. Total items created: {count}")
+    messages.success(request, f"{count} item(s) moved to your checkout.")
     return redirect('cart:measurement_form_view')
 
 
 
 
 
-
 def determine_product_type(cart_items):
-    """
-    Determine the dominant product type from the user's cart.
-    Returns a ProductType instance or None.
-    """
-    product_types = [item.product.product_type for item in cart_items if item.product.product_type]
+    # Define your priority order
+    priority = ["shirt", "jacket", "coat", "vest", "pants", "shorts"]
+    product_types = [item.product.product_type.slug for item in cart_items if item.product.product_type]
 
-    if not product_types:
-        return None
+    for p_type in priority:
+        if p_type in product_types:
+            return ProductType.objects.get(slug=p_type)
 
-    from collections import Counter
-    counts = Counter(product_types)
-    return counts.most_common(1)[0][0]  # Returns the most frequent ProductType instance
+    return None
+
+
+
 
 
 def get_measurement_keys_for_product(product_type):
@@ -377,7 +390,7 @@ def get_measurement_keys_for_product(product_type):
     )
 
 
-
+"""
 @login_required
 def measurement_form_view(request):
     cart_items = CartItem.objects.filter(user=request.user, user_measurement__isnull=True)
@@ -392,14 +405,14 @@ def measurement_form_view(request):
             profile_id = request.POST.get("existing_profile_id")
             selected_profile = get_object_or_404(existing_profiles, id=profile_id)
             cart_items.update(user_measurement=selected_profile)
-            return redirect('cart:checkout')
+            return redirect('cart:cart_to_checkout')
 
         # Creating new measurement
         form = DynamicMeasurementForm(request.POST, request.FILES, measurement_keys=measurement_keys)
         if form.is_valid():
             user_measurement = form.save(user=request.user)
             cart_items.update(user_measurement=user_measurement)
-            return redirect('cart:checkout')
+            return redirect('cart:cart_to_checkout')
     else:
         form = DynamicMeasurementForm(measurement_keys=measurement_keys)
 
@@ -409,5 +422,74 @@ def measurement_form_view(request):
         "form": form,
         "existing_profiles": existing_profiles,
         "cart_items": cart_items,
+        "subtotal": subtotal
+    })
+"""
+
+
+@login_required
+def measurement_form_view(request):
+    # Get ALL cart items for this user (used for summary)
+    all_cart_items = CartItem.objects.filter(user=request.user)
+    
+    # Get ONLY items that need measurement (used for forms)
+    cart_items_needing_measurement = all_cart_items.filter(user_measurement__isnull=True)
+
+    # ✅ Now you can check:
+    if not cart_items_needing_measurement.exists():
+        return redirect('cart:cart_to_checkout')
+
+    print(f"[DEBUG] Found {cart_items_needing_measurement.count()} cart items needing measurement.")
+    for item in cart_items_needing_measurement:
+        print(f"[DEBUG] → {item.product.name} | quantity: {item.quantity}")
+
+    existing_profiles = UserMeasurement.objects.filter(user=request.user)
+    item_forms = []
+
+    if request.method == "POST":
+        if "use_existing" in request.POST:
+            profile_id = request.POST.get("existing_profile_id")
+            selected_profile = get_object_or_404(existing_profiles, id=profile_id)
+            cart_items_needing_measurement.update(user_measurement=selected_profile)
+            return redirect('cart:cart_to_checkout')
+
+        all_valid = True
+        for item in cart_items_needing_measurement:
+            product_type = item.product.product_type
+            measurement_keys = get_measurement_keys_for_product(product_type)
+            form = DynamicMeasurementForm(request.POST, request.FILES, prefix=f"item_{item.id}", measurement_keys=measurement_keys)
+
+            if form.is_valid():
+                measurement = form.save(user=request.user)
+                item.user_measurement = measurement
+                item.save()
+            else:
+                all_valid = False
+
+            item_forms.append((item, form))
+
+        if all_valid:
+            return redirect('cart:cart_to_checkout')
+
+    else:
+        for item in cart_items_needing_measurement:
+            product_type = item.product.product_type
+            measurement_keys = get_measurement_keys_for_product(product_type)
+            form = DynamicMeasurementForm(prefix=f"item_{item.id}", measurement_keys=measurement_keys)
+            item_forms.append((item, form))
+
+    # Annotate ALL cart items with unit_price for display
+    for item in all_cart_items:
+        try:
+            item.unit_price = item.total_price / item.quantity
+        except (ZeroDivisionError, TypeError):
+            item.unit_price = item.base_price
+
+    subtotal = sum(item.total_price for item in all_cart_items)
+
+    return render(request, "cart/measurement_form.html", {
+        "item_forms": item_forms,
+        "existing_profiles": existing_profiles,
+        "cart_items": all_cart_items,  # full cart for summary
         "subtotal": subtotal
     })

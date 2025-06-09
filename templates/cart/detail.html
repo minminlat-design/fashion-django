@@ -322,7 +322,7 @@ Your shopping cart
 
                                 <div class="cart-checkout-btn">
                                     {% if user.is_authenticated %}
-                                        <a href="{% url 'cart:measurement_form_view' %}"
+                                        <a href="{% url 'cart:cart_to_checkout' %}"
                                         class="tf-btn w-100 btn-fill animate-hover-btn radius-3 justify-content-center">
                                             <span>Take Measurements & Checkout</span>
                                         </a>

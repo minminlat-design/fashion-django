@@ -5,12 +5,14 @@
 <div class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
 
   <!-- Left: Measurement Form -->
-  <div class="col-span-2">
-    <h2 class="text-2xl font-bold mb-4">Confirm Your Measurements</h2>
+  <!-- Left: Measurement Form -->
+<div class="col-span-2">
+  <h2 class="text-2xl font-bold mb-4">Confirm Your Measurements</h2>
 
-    <!-- Existing Profiles -->
-    {% if existing_profiles %}
-      <form method="post" class="mb-6">
+  <!-- Section 1: Use Existing Profile -->
+  {% if existing_profiles %}
+    <div class="mb-6 p-4 border rounded shadow-sm bg-white">
+      <form method="post">
         {% csrf_token %}
         <h3 class="text-lg font-semibold mb-2">Use a Saved Measurement Profile</h3>
         <div class="space-y-2">
@@ -24,20 +26,31 @@
         <input type="hidden" name="use_existing" value="1">
         <button type="submit" class="btn btn-primary mt-3">Use Selected Profile</button>
       </form>
+    </div>
 
-      <hr class="my-8">
-      <p class="text-sm text-gray-500 mb-4">— or fill out a new measurement form below —</p>
-    {% endif %}
+    <div class="my-8 text-center">
+      <p class="text-sm text-gray-500">— or fill out a new measurement form below —</p>
+    </div>
+  {% endif %}
 
-    <!-- New Measurement Form -->
+  <!-- Section 2: New Measurement Form -->
+  {% if item_forms %}
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      <h3 class="text-lg font-semibold mb-2">Create New Measurement</h3>
-      {{ form.as_p }}
-
+      {% for item, form in item_forms %}
+        <div class="mb-6 border p-4 rounded shadow-sm bg-white">
+          <h3 class="text-lg font-bold mb-2">{{ item.product.name }}</h3>
+          <p class="text-sm text-gray-600 mb-2">
+            Quantity: {{ item.quantity }} | Base Price: ${{ item.base_price }}
+          </p>
+          {{ form.as_p }}
+        </div>
+      {% endfor %}
       <button type="submit" class="btn btn-success mt-4">Save and Continue to Checkout</button>
     </form>
-  </div>
+  {% endif %}
+</div>
+
 
   <!-- Right: Cart Summary -->
   <div class="col-span-1 bg-gray-50 p-4 rounded shadow-sm">
@@ -46,10 +59,16 @@
     {% for item in cart_items %}
       <div class="border-b pb-4 mb-4">
         <strong>{{ item.product.name }}</strong><br>
+        Unit Price (incl. options): ${{ item.unit_price|floatformat:2 }}<br>
+
         Quantity: {{ item.quantity }}<br>
-        Unit Price: ${{ item.base_price|floatformat:2 }}<br>
-        Total: ${{ item.quantity|floatformat:0|add:"0"|floatformat:"0" }} × {{ item.base_price|floatformat:2 }} =
-        ${{ item.quantity|add:"0"|floatformat:"0"|add:"0"|floatformat:"0"|floatformat:"2" }} × {{ item.base_price|floatformat:2 }}<br>
+        Total: ${{ item.total_price|floatformat:2 }}<br>
+
+        {% if item.gift_wrap %}
+  <small>Includes $5.00 gift wrap</small><br>
+{% endif %}
+
+
 
         <span class="block mt-1 text-sm text-gray-600">
           {% if item.selected_options %}

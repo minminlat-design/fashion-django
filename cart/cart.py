@@ -143,6 +143,9 @@ class Cart:
                 item['customizations'] = item.get('customizations', {})
                 item['cart_key'] = cart_key
                 
+                
+                 # ✅ Add this debug print
+                print(f"[DEBUG] Yielding cart item: {item}")
 
                 yield item
                 

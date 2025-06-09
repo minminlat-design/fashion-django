@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+
+  <!-- Left: Measurement Form -->
+  <div class="col-span-2">
+    <h2 class="text-2xl font-bold mb-4">Confirm Your Measurements</h2>
+
+    <!-- Existing Profiles -->
+    {% if existing_profiles %}
+      <form method="post" class="mb-6">
+        {% csrf_token %}
+        <h3 class="text-lg font-semibold mb-2">Use a Saved Measurement Profile</h3>
+        <div class="space-y-2">
+          {% for profile in existing_profiles %}
+            <label class="block">
+              <input type="radio" name="existing_profile_id" value="{{ profile.id }}" required>
+              {{ profile.name }} — saved {{ profile.created_at|date:"M d, Y" }}
+            </label>
+          {% endfor %}
+        </div>
+        <input type="hidden" name="use_existing" value="1">
+        <button type="submit" class="btn btn-primary mt-3">Use Selected Profile</button>
+      </form>
+
+      <hr class="my-8">
+      <p class="text-sm text-gray-500 mb-4">— or fill out a new measurement form below —</p>
+    {% endif %}
+
+    <!-- New Measurement Form -->
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <h3 class="text-lg font-semibold mb-2">Create New Measurement</h3>
+      {{ form.as_p }}
+
+      <button type="submit" class="btn btn-success mt-4">Save and Continue to Checkout</button>
+    </form>
+  </div>
+
+  <!-- Right: Cart Summary -->
+  <div class="col-span-1 bg-gray-50 p-4 rounded shadow-sm">
+    <h2 class="text-lg font-semibold mb-4">Cart Summary</h2>
+
+    {% for item in cart_items %}
+      <div class="border-b pb-4 mb-4">
+        <strong>{{ item.product.name }}</strong><br>
+        Quantity: {{ item.quantity }}<br>
+        Unit Price: ${{ item.base_price|floatformat:2 }}<br>
+        Total: ${{ item.quantity|floatformat:0|add:"0"|floatformat:"0" }} × {{ item.base_price|floatformat:2 }} =
+        ${{ item.quantity|add:"0"|floatformat:"0"|add:"0"|floatformat:"0"|floatformat:"2" }} × {{ item.base_price|floatformat:2 }}<br>
+
+        <span class="block mt-1 text-sm text-gray-600">
+          {% if item.selected_options %}
+            Options: {{ item.selected_options }}<br>
+          {% endif %}
+          {% if item.customizations %}
+            Customizations: {{ item.customizations }}<br>
+          {% endif %}
+        </span>
+      </div>
+    {% empty %}
+      <p>Your cart is empty.</p>
+    {% endfor %}
+
+    <div class="mt-4">
+      <p class="font-semibold text-lg">Subtotal: ${{ subtotal|floatformat:2 }}</p>
+    </div>
+
+    <div class="mt-4">
+      <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline w-full">Edit Cart</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

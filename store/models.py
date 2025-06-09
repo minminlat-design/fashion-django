@@ -5,6 +5,8 @@ from django.forms import ValidationError
 from ckeditor.fields import RichTextField
 from django.db.models import F
 
+from measurement.models import ProductType
+
 
 class IsSaleManager(models.Manager):
     def get_queryset(self):
@@ -45,6 +47,8 @@ class Product(models.Model):
     
     objects = models.Manager() # default manager
     is_sale = IsSaleManager() # Custom manager for sale products
+    # measuring type field
+    product_type = models.ForeignKey(ProductType, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
    
     
     class Meta:

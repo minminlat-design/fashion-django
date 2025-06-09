@@ -2,7 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from accounts import views
 from accounts.forms import EmailAuthenticationForm
-from accounts.views import CustomPasswordResetView, load_account_section, account_details
+from accounts.views import CustomLoginView, CustomPasswordResetView, load_account_section, account_details
 
 
 
@@ -10,8 +10,9 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     
     # login / logout urls
-    path('login/', auth_views.LoginView.as_view(template_name='account/login.html',
-                                                authentication_form=EmailAuthenticationForm), name='login'),
+    #path('login/', auth_views.LoginView.as_view(template_name='account/login.html',
+    #                                            authentication_form=EmailAuthenticationForm), name='login'),
+    path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     
     # Change password urls

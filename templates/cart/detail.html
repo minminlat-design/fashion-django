@@ -318,12 +318,26 @@ Your shopping cart
                                         I agree with the <a href="terms-conditions.html">terms and conditions</a>
                                     </label>
                                 </div>
+
+
                                 <div class="cart-checkout-btn">
-                                    <a href="checkout.html"
+                                    {% if user.is_authenticated %}
+                                        <a href="{% url 'cart:measurement_form_view' %}"
                                         class="tf-btn w-100 btn-fill animate-hover-btn radius-3 justify-content-center">
-                                        <span>Check out</span>
-                                    </a>
+                                            <span>Take Measurements & Checkout</span>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'login' %}?next={% url 'cart:measurement_form_view' %}"
+                                        class="tf-btn w-100 btn-fill animate-hover-btn radius-3 justify-content-center">
+                                            <span>Take Measurements & Checkout</span>
+                                        </a>
+                                    {% endif %}
                                 </div>
+
+                                                                
+
+
+
                                 <div class="tf-page-cart_imgtrust">
                                     <p class="text-center fw-6">Guarantee Safe Checkout</p>
                                     <div class="cart-list-social">

@@ -2,8 +2,14 @@ from django.db import models
 from decimal import Decimal
 from django.utils import timezone
 import uuid
+from measurement.models import UserMeasurement
 from store.models import Product
 from django.contrib.postgres.fields import JSONField
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
 
 class Cart(models.Model):
     cart_id = models.CharField(max_length=250, blank=True, unique=True)
@@ -14,48 +20,6 @@ class Cart(models.Model):
         if not self.cart_id:
             self.cart_id = str(uuid.uuid4())
         super().save(*args, **kwargs)
-
-
-"""
-class CartItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    is_active = models.BooleanField(default=True)
-    
-    customizations = models.JSONField(blank=True, null=True) # Store all customization options
-    
-    def __str__(self):
-        return self.product
-    
-"""    
-
-class CartItem(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    is_active = models.BooleanField(default=True)
-
-    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    #  Holds selected variation options (like lapel, vent, monogram etc.)
-    selected_options = models.JSONField(default=dict, blank=True)
-
-    #  If you want to separate other metadata or text inputs (e.g., monogram text, initials)
-    customizations = models.JSONField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
-
-    def calculate_total_price(self):
-        extra_price = 0
-        for option_data in self.selected_options.values():
-            try:
-                extra_price += float(option_data.get("price_difference", 0))
-            except (TypeError, ValueError):
-                continue
-        return (self.base_price + extra_price) * self.quantity
 
 
 
@@ -75,3 +39,61 @@ class CartSettings(models.Model):
     class Meta:
         verbose_name = "Cart Setting"
         verbose_name_plural = "Cart Settings"
+
+
+
+
+
+
+
+
+class CartItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)  # ✅ Add this
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, null=True, blank=True)
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    gift_wrap = models.BooleanField(default=False)  # ✅ Optional gift wrap
+
+    user_measurement = models.ForeignKey(
+        UserMeasurement,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Measurement set used for this item"
+    )
+
+    frozen_measurement_data = models.JSONField(blank=True, null=True)
+
+    selected_options = models.JSONField(default=dict, blank=True)
+    customizations = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity}"
+
+    def calculate_total_price(self):
+        extra_price = Decimal('0')
+        for option_data in self.selected_options.values():
+            try:
+                price_diff = option_data.get("price_difference", 0)
+                extra_price += Decimal(str(price_diff))  # convert to Decimal from string
+            except (TypeError, ValueError):
+                continue
+
+        total = (self.base_price + extra_price) * self.quantity
+
+        if self.gift_wrap:
+            total += Decimal('5.00')  # Add wrap price as Decimal
+
+        return total
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.calculate_total_price()
+        if self.user_measurement and not self.frozen_measurement_data:
+            self.frozen_measurement_data = self.user_measurement.measurement_data
+        super().save(*args, **kwargs)

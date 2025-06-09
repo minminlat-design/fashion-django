@@ -29,13 +29,14 @@
                                 <li><a href="#" class="my-account-nav-item {% if section == 'address' %}active{% endif %}" data-section="address">Address</a></li>
                                 <li><a href="#" class="my-account-nav-item {% if section == 'account_details' %}active{% endif %}" data-section="account_details">Account Details</a></li>
                                 
-                                
+                                <li>
                                 <form action="{% url 'logout' %}" method="post">
                                     {% csrf_token %}
-                                   <li><button type="submit" class="my-account-nav-item">Logout</button></li>
+                                   <button type="submit" class="my-account-nav-item">Logout</button>
                                 </form>
-                                {% else %}
-                                <li><a href="{% url 'login' %}" class="my-account-nav-item">Log-in</a></li>
+                                </li>
+
+                                
                                 {% endif %}
                                 
                             </ul>

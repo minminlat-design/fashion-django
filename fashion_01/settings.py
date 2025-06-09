@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "search",
+    "measurement",
+    "django_json_widget",
     
     
     

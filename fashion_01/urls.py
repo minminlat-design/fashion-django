@@ -29,6 +29,8 @@ urlpatterns = [
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('search/', include('search.urls', namespace='search')),
     path('account/', include('accounts.urls')),
+    path('measurements/', include('measurement.urls')),
+
    
 ]
 

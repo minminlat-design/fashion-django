@@ -10,4 +10,6 @@ urlpatterns = [
     path('update-quantity/', views.cart_update_quantity, name='cart_update_quantity'),  # AJAX: update quantity
     path('shipping-info/', views.cart_shipping_info, name='cart_shipping_info'),  # AJAX: free shipping progress
     path('toggle-gift-wrap/', views.toggle_gift_wrap, name='toggle_gift_wrap'),  # AJAX: toggle gift wrap
+    path('checkout/', views.cart_to_checkout, name='cart_to_checkout'),
+    path('measurement/', views.measurement_form_view, name='measurement_form_view'),
 ]

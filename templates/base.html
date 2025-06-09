@@ -755,10 +755,15 @@ function autoHideMessages() {
 }
 </script>
 
+
 <script>
-// Handle account menu item clicks and load section via AJAX
 $(document).ready(function () {
     $('.my-account-nav-item').click(function (e) {
+        // Skip if it's inside a form (like logout button)
+        if ($(this).closest('form').length > 0) {
+            return; // allow form to submit
+        }
+
         e.preventDefault();
 
         const section = $(this).data('section');
@@ -771,6 +776,8 @@ $(document).ready(function () {
     });
 });
 </script>
+
+
 
 <script>
 // AJAX submit for password change form (initial bind, outside dynamic load)

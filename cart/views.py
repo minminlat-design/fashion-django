@@ -426,7 +426,6 @@ def measurement_form_view(request):
     })
 """
 
-
 @login_required
 def measurement_form_view(request):
     # Get ALL cart items for this user (used for summary)
@@ -435,7 +434,7 @@ def measurement_form_view(request):
     # Get ONLY items that need measurement (used for forms)
     cart_items_needing_measurement = all_cart_items.filter(user_measurement__isnull=True)
 
-    # ✅ Now you can check:
+    # If no measurement needed, redirect to checkout
     if not cart_items_needing_measurement.exists():
         return redirect('cart:cart_to_checkout')
 
@@ -454,22 +453,31 @@ def measurement_form_view(request):
             return redirect('cart:cart_to_checkout')
 
         all_valid = True
+        item_forms = []
+
         for item in cart_items_needing_measurement:
             product_type = item.product.product_type
             measurement_keys = get_measurement_keys_for_product(product_type)
-            form = DynamicMeasurementForm(request.POST, request.FILES, prefix=f"item_{item.id}", measurement_keys=measurement_keys)
+            form = DynamicMeasurementForm(
+                request.POST,
+                request.FILES,
+                prefix=f"item_{item.id}",
+                measurement_keys=measurement_keys
+            )
 
-            if form.is_valid():
-                measurement = form.save(user=request.user)
-                item.user_measurement = measurement
-                item.save()
-            else:
+            item_forms.append((item, form))  # Add form regardless of validity
+
+            if not form.is_valid():
                 all_valid = False
+                continue  # Skip this item
 
-            item_forms.append((item, form))
+            measurement = form.save(user=request.user)
+            item.user_measurement = measurement
+            item.save()
 
         if all_valid:
             return redirect('cart:cart_to_checkout')
+
 
     else:
         for item in cart_items_needing_measurement:
@@ -477,6 +485,48 @@ def measurement_form_view(request):
             measurement_keys = get_measurement_keys_for_product(product_type)
             form = DynamicMeasurementForm(prefix=f"item_{item.id}", measurement_keys=measurement_keys)
             item_forms.append((item, form))
+            
+            
+    for item, form in item_forms:
+       print(f"DEBUG ITEM ID: {item.id} | Product: {item.product.name}")
+
+
+    # Calculate extra options with prices for each cart item
+    extra_options_per_item = {}
+
+    for item, form in item_forms:
+        item_key = item.pk or item.product.pk
+        extras = []
+        selected_options = item.selected_options or {}
+
+        for key, val in selected_options.items():
+            # Skip if val is not a dict
+            if not isinstance(val, dict):
+                continue
+
+            # Case 1: Direct option with price_difference
+            price_diff = val.get("price_difference")
+            if price_diff and Decimal(price_diff) > 0:
+                extras.append({
+                    "label": key,
+                    "name": val.get("name") or (val.get("items") or {}).get("name"),
+                    "price": Decimal(price_diff)
+                })
+
+            # Case 2: Nested sub-options
+            elif "items" in val and isinstance(val["items"], dict):
+                for subkey, subval in val["items"].items():
+                    if isinstance(subval, dict):
+                        sub_price = subval.get("price_difference")
+                        if sub_price and Decimal(sub_price) > 0:
+                            extras.append({
+                                "label": f"{key} - {subkey}",
+                                "name": subval.get("name"),
+                                "price": Decimal(sub_price)
+                            })
+
+        extra_options_per_item[item_key] = extras
+
 
     # Annotate ALL cart items with unit_price for display
     for item in all_cart_items:
@@ -491,5 +541,6 @@ def measurement_form_view(request):
         "item_forms": item_forms,
         "existing_profiles": existing_profiles,
         "cart_items": all_cart_items,  # full cart for summary
-        "subtotal": subtotal
+        "subtotal": subtotal,
+        "extra_options_per_item": extra_options_per_item,
     })

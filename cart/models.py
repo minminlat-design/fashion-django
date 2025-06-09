@@ -78,19 +78,31 @@ class CartItem(models.Model):
 
     def calculate_total_price(self):
         extra_price = Decimal('0')
-        for option_data in self.selected_options.values():
-            try:
-                price_diff = option_data.get("price_difference", 0)
-                extra_price += Decimal(str(price_diff))  # convert to Decimal from string
-            except (TypeError, ValueError):
-                continue
+
+        def extract_prices(data):
+            nonlocal extra_price
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    if key == "price_difference":
+                        try:
+                            extra_price += Decimal(str(value))
+                        except (TypeError, ValueError):
+                            continue
+                    else:
+                        extract_prices(value)
+            elif isinstance(data, list):
+                for item in data:
+                    extract_prices(item)
+
+        extract_prices(self.selected_options)
 
         total = (self.base_price + extra_price) * self.quantity
 
         if self.gift_wrap:
-            total += Decimal('5.00')  # Add wrap price as Decimal
+            total += Decimal('5.00')
 
         return total
+
 
     def save(self, *args, **kwargs):
         self.total_price = self.calculate_total_price()

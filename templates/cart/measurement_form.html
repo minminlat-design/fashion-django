@@ -1,56 +1,115 @@
 {% extends "base.html" %}
 {% load static %}
+{% load form_tags %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
 
   <!-- Left: Measurement Form -->
-  <!-- Left: Measurement Form -->
-<div class="col-span-2">
-  <h2 class="text-2xl font-bold mb-4">Confirm Your Measurements</h2>
+  <div class="col-span-2">
+    <h2 class="text-2xl font-bold mb-4">Confirm Your Measurements</h2>
 
-  <!-- Section 1: Use Existing Profile -->
-  {% if existing_profiles %}
-    <div class="mb-6 p-4 border rounded shadow-sm bg-white">
-      <form method="post">
+    <!-- Section 1: Use Existing Profile -->
+    {% if existing_profiles %}
+      <div class="mb-6 p-4 border rounded shadow-sm bg-white">
+        <form method="post">
         {% csrf_token %}
-        <h3 class="text-lg font-semibold mb-2">Use a Saved Measurement Profile</h3>
-        <div class="space-y-2">
+        <label for="existing_profile_id">Use a saved measurement:</label>
+        <select name="existing_profile_id" id="existing_profile_id" required>
           {% for profile in existing_profiles %}
-            <label class="block">
-              <input type="radio" name="existing_profile_id" value="{{ profile.id }}" required>
-              {{ profile.name }} — saved {{ profile.created_at|date:"M d, Y" }}
-            </label>
+            <option value="{{ profile.id }}">
+              {{ profile.fit_type|title }} | {{ profile.created_at|date:"Y-m-d" }}
+            </option>
           {% endfor %}
-        </div>
-        <input type="hidden" name="use_existing" value="1">
-        <button type="submit" class="btn btn-primary mt-3">Use Selected Profile</button>
+        </select>
+        <button type="submit" name="use_existing">Use Selected</button>
       </form>
-    </div>
+      <br/>
+      <p>You can always update your measurement on your dashboard or use the saved measurement.</p>
+      </div>
 
-    <div class="my-8 text-center">
-      <p class="text-sm text-gray-500">— or fill out a new measurement form below —</p>
-    </div>
-  {% endif %}
+      <div class="my-8 text-center">
+        <p class="text-sm text-gray-500">— or fill out a new measurement form below —</p>
+      </div>
+    {% endif %}
 
-  <!-- Section 2: New Measurement Form -->
-  {% if item_forms %}
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      {% for item, form in item_forms %}
-        <div class="mb-6 border p-4 rounded shadow-sm bg-white">
-          <h3 class="text-lg font-bold mb-2">{{ item.product.name }}</h3>
-          <p class="text-sm text-gray-600 mb-2">
-            Quantity: {{ item.quantity }} | Base Price: ${{ item.base_price }}
-          </p>
-          {{ form.as_p }}
+    <!-- ✨ NEW: Additional Items Summary -->
+    {% if item_forms %}
+      <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded shadow-sm">
+        <h2 class="text-lg font-semibold mb-2">Additional Items Summary</h2>
+        <ul class="list-disc list-inside text-sm text-gray-700">
+          {% for item, form in item_forms %}
+            {% if item.selected_options %}
+              <li>
+                <strong>{{ item.product.name }}:</strong>
+                {% for key, val in item.selected_options.items %}
+                  {{ key|capfirst }}:
+                  {% if val.name %}
+                    {{ val.name }}
+                  {% elif val.items %}
+                    {{ val.items.name }}
+                  {% else %}
+                    {% for subkey, subval in val.items %}
+                      {{ subkey|capfirst }} - {{ subval.name }},
+                    {% endfor %}
+                  {% endif %}
+                  |
+                {% endfor %}
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <!-- Section 2: New Measurement Form -->
+    {% if item_forms %}
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+
+     
+
+{% for item, form in item_forms %}
+ 
+
+  <div class="mb-6 border p-4 rounded shadow-sm bg-white">
+    <h3 class="text-lg font-bold mb-2">{{ item.product.name }}</h3>
+    <br/>
+    {% comment "" %}
+    
+    
+    <p class="text-sm text-gray-600 mb-2">
+      Quantity: {{ item.quantity }} | Base Price: ${{ item.base_price }}
+    </p>
+
+    {% with extras=extra_options_per_item|get_item:item.pk %}
+      {% if extras %}
+        <div class="bg-gray-100 text-sm p-3 rounded mb-3">
+          <strong>Additional Options (Extra Charges):</strong>
+          <ul class="list-disc list-inside">
+            {% for extra in extras %}
+              <li>{{ extra.label }}: {{ extra.name }} (+${{ extra.price }})</li>
+            {% endfor %}
+          </ul>
         </div>
-      {% endfor %}
-      <button type="submit" class="btn btn-success mt-4">Save and Continue to Checkout</button>
-    </form>
-  {% endif %}
-</div>
+      {% endif %}
+    {% endwith %}
+{% endcomment %}
+    {{ form.as_p }}
+  </div>
+{% endfor %}
 
+
+
+
+
+
+        
+        <button type="submit" class="btn btn-success mt-4">Save and Continue to Checkout</button>
+      </form>
+    {% endif %}
+  </div>
 
   <!-- Right: Cart Summary -->
   <div class="col-span-1 bg-gray-50 p-4 rounded shadow-sm">
@@ -65,10 +124,8 @@
         Total: ${{ item.total_price|floatformat:2 }}<br>
 
         {% if item.gift_wrap %}
-  <small>Includes $5.00 gift wrap</small><br>
-{% endif %}
-
-
+          <small>Includes $5.00 gift wrap</small><br>
+        {% endif %}
 
         <span class="block mt-1 text-sm text-gray-600">
           {% if item.selected_options %}
@@ -94,3 +151,4 @@
 
 </div>
 {% endblock %}
+  

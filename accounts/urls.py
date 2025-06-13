@@ -23,6 +23,8 @@ urlpatterns = [
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('password-reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('password-reset/complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+
 
 
    
@@ -30,6 +32,9 @@ urlpatterns = [
     
     # dashboard section ajax call
     path('section/<str:section>/', load_account_section, name='account_section'),
+    path('account/update-measurements/', views.update_measurements, name='update_measurements'),
+
+    
 
 
        

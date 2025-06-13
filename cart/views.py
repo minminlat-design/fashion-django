@@ -390,41 +390,6 @@ def get_measurement_keys_for_product(product_type):
     )
 
 
-"""
-@login_required
-def measurement_form_view(request):
-    cart_items = CartItem.objects.filter(user=request.user, user_measurement__isnull=True)
-
-    existing_profiles = UserMeasurement.objects.filter(user=request.user)
-
-    product_type = determine_product_type(cart_items)
-    measurement_keys = get_measurement_keys_for_product(product_type)
-
-    if request.method == "POST":
-        if "use_existing" in request.POST:
-            profile_id = request.POST.get("existing_profile_id")
-            selected_profile = get_object_or_404(existing_profiles, id=profile_id)
-            cart_items.update(user_measurement=selected_profile)
-            return redirect('cart:cart_to_checkout')
-
-        # Creating new measurement
-        form = DynamicMeasurementForm(request.POST, request.FILES, measurement_keys=measurement_keys)
-        if form.is_valid():
-            user_measurement = form.save(user=request.user)
-            cart_items.update(user_measurement=user_measurement)
-            return redirect('cart:cart_to_checkout')
-    else:
-        form = DynamicMeasurementForm(measurement_keys=measurement_keys)
-
-    subtotal = sum(item.quantity * item.base_price for item in cart_items)
-
-    return render(request, "cart/measurement_form.html", {
-        "form": form,
-        "existing_profiles": existing_profiles,
-        "cart_items": cart_items,
-        "subtotal": subtotal
-    })
-"""
 
 @login_required
 def measurement_form_view(request):
@@ -450,7 +415,9 @@ def measurement_form_view(request):
             profile_id = request.POST.get("existing_profile_id")
             selected_profile = get_object_or_404(existing_profiles, id=profile_id)
             cart_items_needing_measurement.update(user_measurement=selected_profile)
-            return redirect('cart:cart_to_checkout')
+            messages.success(request, "Saved measurement profile applied successfully.")
+            return redirect('orders:shipping_info')
+
 
         all_valid = True
         item_forms = []
@@ -472,11 +439,26 @@ def measurement_form_view(request):
                 continue  # Skip this item
 
             measurement = form.save(user=request.user)
+
             item.user_measurement = measurement
+            item.frozen_measurement_data = {
+                "fit_type": measurement.fit_type,
+                "data": measurement.measurement_data,
+                "photos": {
+                    "front": measurement.photo_front.url if measurement.photo_front else None,
+                    "side": measurement.photo_side.url if measurement.photo_side else None,
+                    "back": measurement.photo_back.url if measurement.photo_back else None,
+                }
+            }
             item.save()
+        print(f"[DEBUG] Saved frozen data for item {item.id}: {item.frozen_measurement_data}")
+
 
         if all_valid:
-            return redirect('cart:cart_to_checkout')
+            messages.success(request, "Measurements submitted successfully.")
+            return redirect('orders:shipping_info')
+        else:
+            messages.error(request, "There was an error in the form. Please correct the highlighted fields.")
 
 
     else:

@@ -1,0 +1,7 @@
+<!-- templates/orders/payment_cancel.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-red-600 text-2xl font-bold">Payment Canceled</h2>
+<p>Your payment was not completed. You can try again or return to your cart.</p>
+<a href="{% url 'cart:cart_detail' %}" class="text-blue-600 underline">Back to Cart</a>
+{% endblock %}

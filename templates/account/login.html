@@ -81,7 +81,7 @@
                         <h5 class="mb_36">I'm new here</h5>
                         <p class="mb_20">Sign up for early Sale access plus tailored new arrivals, trends and
                             promotions. To opt out, click unsubscribe in our emails.</p>
-                        <a href="{% url 'register' %}" class="tf-btn btn-line">Register<i
+                        <a href="{% url 'register' %}?next={% url 'cart:measurement_form_view' %}" class="tf-btn btn-line">Register<i
                                 class="icon icon-arrow1-top-left"></i></a>
                     </div>
                 </div>

@@ -30,6 +30,9 @@ urlpatterns = [
     path('search/', include('search.urls', namespace='search')),
     path('account/', include('accounts.urls')),
     path('measurements/', include('measurement.urls')),
+    path('orders/', include('orders.urls', namespace='orders')),
+    path('admin-panel/', include('admin_dashboard.urls', namespace='admin_dashboard')),
+
 
    
 ]

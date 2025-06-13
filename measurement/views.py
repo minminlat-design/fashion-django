@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import DynamicMeasurementForm
 from .models import MeasurementType, ProductType, UserMeasurement
 from django.contrib.auth.decorators import login_required
-from cart.models import CartItem
+
 
 
 
@@ -66,42 +66,3 @@ def edit_measurement(request, pk):
     })
 
 
-
-"""
-
-@login_required
-def measurement_form_view(request):
-    existing_profiles = UserMeasurement.objects.filter(user=request.user)
-
-    cart_items = CartItem.objects.filter(cart__user=request.user)
-    product_types = {
-        item.product.product_type for item in cart_items
-        if item.product and item.product.product_type
-    }
-
-    measurement_keys = MeasurementType.objects.filter(
-        producttypemeasurement__product_type__in=product_types
-    ).values_list('key', flat=True).distinct()
-
-    if request.method == "POST":
-        if "use_existing" in request.POST:
-            profile_id = request.POST.get("existing_profile_id")
-            selected_profile = get_object_or_404(existing_profiles, id=profile_id)
-
-            CartItem.objects.filter(cart__user=request.user).update(user_measurement=selected_profile)
-            return redirect("checkout")
-
-        # Creating a new profile
-        form = DynamicMeasurementForm(request.POST, request.FILES, measurement_keys=measurement_keys)
-        if form.is_valid():
-            um = form.save(user=request.user)
-            CartItem.objects.filter(cart__user=request.user).update(user_measurement=um)
-            return redirect("checkout")
-    else:
-        form = DynamicMeasurementForm(measurement_keys=measurement_keys)
-
-    return render(request, "measurements/form.html", {
-        "form": form,
-        "existing_profiles": existing_profiles
-    })
-"""

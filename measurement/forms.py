@@ -32,6 +32,9 @@ class DynamicMeasurementForm(forms.Form):
                 help_text=mt.description or '',
                 widget=forms.NumberInput(attrs={'step': '0.1'})
             )
+            # Attach the video URL or file path as a custom attribute
+            self.fields[mt.key].video_source = mt.get_video_source()
+            
 
         # Pre-fill form if editing existing instance
         if instance:
@@ -79,7 +82,7 @@ class DynamicMeasurementForm(forms.Form):
             return self.instance
         else:
             # Create new instance
-            return UserMeasurement.objects.create(
+            instance = UserMeasurement.objects.create(
                 user=user,
                 fit_type=self.cleaned_data.get('fit_type'),
                 photo_front=self.cleaned_data.get('photo_front'),
@@ -87,3 +90,5 @@ class DynamicMeasurementForm(forms.Form):
                 photo_back=self.cleaned_data.get('photo_back'),
                 measurement_data=measurement_data
             )
+            return instance
+

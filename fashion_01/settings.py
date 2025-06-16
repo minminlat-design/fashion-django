@@ -27,7 +27,8 @@ SECRET_KEY = "django-insecure-ejz$1doe!xcf)edqm%(mkt_62j0f0-1s)e!5h^c0nmnl0$(rs3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
+#ALLOWED_HOSTS = ['mysite.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['django-tailor-env.eba-segcsmbj.us-west-2.elasticbeanstalk.com']
 
 
 # Application definition
@@ -205,7 +206,7 @@ MESSAGE_TAGS = {
 
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 
@@ -214,3 +215,13 @@ STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
 STRIPE_API_VERSION = '2019-02-19'
 
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET')
+
+DEFAULT_FROM_EMAIL = 'latkolat@gmail.com'
+
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')

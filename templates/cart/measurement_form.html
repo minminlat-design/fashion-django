@@ -304,6 +304,7 @@
 
         <div class="flex-grow-1 ms-3">
           <p class="mb-1 fw-semibold text-truncate" title="{{ item.product.name }}">{{ item.product.name }}</p>
+          
           {% if item.selected_options %}
           <small class="text-muted d-block mb-1">
             {% for key, val in item.selected_options.items %}

@@ -3,6 +3,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from orders.models import Order
+from .tasks import payment_completed
+
 
 @csrf_exempt
 def stripe_webhook(request):
@@ -31,6 +33,9 @@ def stripe_webhook(request):
                 order.status = 'processing'  # Optional but helpful
                 order.stripe_id = session.get('payment_intent')  # ✅ Save payment intent
                 order.save()
+                # launch asynchronous task
+                payment_completed.delay(order.id)
+                
                 print(f"[Webhook] Order {order.id} marked as paid.")
             except Order.DoesNotExist:
                 return HttpResponse(status=404)

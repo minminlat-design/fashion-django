@@ -262,7 +262,41 @@
                 </div>
             </div>
             <div class="mb-bottom">
-                <a href="login.html" class="site-nav-icon"><i class="icon icon-account"></i>Login</a>
+
+                <!-- mobil menu bottom login, dashboard, name-->
+
+
+
+               <div class="tf-brands-filter">
+    {% if request.user.is_authenticated %}
+        <a href="{% url 'dashboard' %}" class="tf-btns-filter tf-tab-link">
+            <span>Dashboard</span>
+        </a>
+
+        <span class="tf-btns-filter tf-tab-link" style="cursor: default;">
+            {{ user.first_name|default:user.username }}
+        </span>
+
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="tf-btns-filter tf-tab-link logout-button">
+                <span>Logout</span>
+            </button>
+        </form>
+    {% else %}
+       
+        <a href="{% url 'login' %}" class="site-nav-icon"><i class="icon icon-account"></i>Login</a>
+    {% endif %}
+</div>
+
+
+              
+
+
+
+
+                
+                
                 <div class="bottom-bar-language">
                     <div class="tf-currencies">
                         <select class="image-select center style-default type-currencies">

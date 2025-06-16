@@ -25,3 +25,16 @@ def add_class(field, css):
 @register.filter
 def country_name(code):
     return COUNTRY_DICT.get(code, code)
+
+
+
+@register.filter
+def dict_get(d, key):
+    if isinstance(d, dict):
+        return d.get(key)
+    return ''
+
+
+@register.filter
+def is_dict(value):
+    return isinstance(value, dict)
